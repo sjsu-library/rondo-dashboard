@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exhibit Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:         #f7f5f2;
+    --surface:    #ffffff;
+    --border:     #e4e0db;
+    --border-med: #d4d0cb;
+    --text:       #1a1816;
+    --muted:      #8a8480;
+    --faint:      #c8c4c0;
+    --green:      #2d7a4f;
+    --red:        #c0392b;
+    --blue:       #2c5faa;
+    --font-serif: 'Lora', Georgia, serif;
+    --font-mono:  'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .topbar-brand { font-family: var(--font-serif); font-weight: 500; color: var(--text); cursor: pointer; text-decoration: none; }
+  .topbar-sep { color: var(--faint); }
+  .topbar-repo { color: var(--muted); font-size: 12px; }
+  .topbar-right { display: flex; gap: 8px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 6px;
+    font-size: 11px; font-family: var(--font-mono); font-weight: 500;
+    cursor: pointer; border: none; text-decoration: none;
+    transition: opacity .15s, background .15s; white-space: nowrap;
+  }
+  .btn:hover { opacity: .82; }
+  .btn-ghost   { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-primary { background: var(--text); color: #fff; }
+  .btn-green   { background: var(--green); color: #fff; }
+
+  /* ── MAIN LAYOUT ── */
+  .main { flex: 1; padding: 36px 36px 60px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  /* ── HERO ── */
+  .hero {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 24px; margin-bottom: 36px; flex-wrap: wrap;
+  }
+  .hero-left { flex: 1; min-width: 260px; }
+  .hero-type {
+    font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .type-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .hero-title {
+    font-family: var(--font-serif); font-size: 38px; font-weight: 400;
+    line-height: 1.15; letter-spacing: -.02em; margin-bottom: 10px;
+  }
+  .hero-title em { font-style: italic; }
+  .hero-desc { font-size: 12px; color: var(--muted); line-height: 1.7; max-width: 480px; }
+
+  .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+
+  .hero-right {
+    display: flex; flex-direction: column; gap: 10px;
+    min-width: 200px;
+  }
+  .meta-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 18px;
+  }
+  .meta-label { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .meta-value { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .meta-value a { color: var(--blue); text-decoration: none; }
+  .meta-value a:hover { text-decoration: underline; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 4px; font-size: 10px;
+    font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .pill-live  { background: rgba(45,122,79,.1);  color: var(--green); border: 1px solid rgba(45,122,79,.2); }
+  .pill-draft { background: rgba(44,95,170,.08); color: var(--blue);  border: 1px solid rgba(44,95,170,.2); }
+
+  /* ── DIVIDER ── */
+  .section-divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+  /* ── GRID ── */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 800px) { .content-grid { grid-template-columns: 1fr; } }
+
+  /* ── FILE TREE ── */
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .panel-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-title { font-size: 11px; font-weight: 500; letter-spacing: .04em; }
+  .panel-meta  { font-size: 10px; color: var(--faint); }
+
+  .file-tree { padding: 8px 0; }
+  .tree-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 18px; font-size: 11px; color: var(--text);
+    cursor: pointer; transition: background .1s; text-decoration: none;
+  }
+  .tree-item:hover { background: var(--bg); }
+  .tree-item.folder { color: var(--muted); }
+  .tree-icon { width: 14px; text-align: center; flex-shrink: 0; font-size: 12px; }
+  .tree-name { flex: 1; }
+  .tree-size { font-size: 10px; color: var(--faint); }
+
+  .tree-folder-contents { display: none; }
+  .tree-folder-contents.open { display: block; }
+  .tree-folder-contents .tree-item { padding-left: 38px; }
+
+  /* ── COMMITS ── */
+  .commit-list { padding: 0; }
+  .commit-item {
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .commit-item:last-child { border-bottom: none; }
+  .commit-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-med); flex-shrink: 0; margin-top: 4px; }
+  .commit-dot.mine { background: var(--green); }
+  .commit-info { flex: 1; min-width: 0; }
+  .commit-msg { font-size: 11px; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .commit-sub { font-size: 10px; color: var(--faint); }
+  .commit-sha { font-size: 10px; color: var(--faint); font-family: var(--font-mono); }
+
+  /* ── SIDEBAR PANELS ── */
+  .sidebar-stack { display: flex; flex-direction: column; gap: 16px; }
+
+  .link-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-decoration: none; color: var(--text);
+    transition: background .1s;
+  }
+  .link-item:last-child { border-bottom: none; }
+  .link-item:hover { background: var(--bg); }
+  .link-icon { font-size: 14px; width: 20px; text-align: center; }
+  .link-label { flex: 1; }
+  .link-arrow { color: var(--faint); font-size: 10px; }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 18px;
+  }
+  .stat-label { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-family: var(--font-serif); font-weight: 400; line-height: 1; }
+
+  /* ── LOADING / ERROR ── */
+  .loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 24px; gap: 16px; }
+  .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--text); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-txt { font-size: 11px; color: var(--muted); }
+
+  .error-wrap { text-align: center; padding: 60px 24px; }
+  .error-title { font-family: var(--font-serif); font-size: 22px; margin-bottom: 8px; }
+  .error-sub { font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="topbar-brand" href="landing.html">Rondo</a>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-repo" id="topbar-repo">Loading…</span>
+  </div>
+  <div class="topbar-right">
+    <a class="btn btn-ghost" href="landing.html">← Dashboard</a>
+    <a class="btn btn-primary" id="btn-open-repo" href="#" target="_blank">Open in GitHub ↗</a>
+  </div>
+</div>
+
+<div class="main" id="main-content">
+  <div class="loading-wrap" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-txt">Loading exhibit…</div>
+  </div>
+</div>
+
+<script>
+  const token = sessionStorage.getItem('gh_token');
+  const params = new URLSearchParams(window.location.search);
+  const owner  = params.get('owner');
+  const repo   = params.get('repo');
+
+  if (!token || !owner || !repo) {
+    window.location.href = 'landing.html';
+  }
+
+  function timeAgo(d) {
+    const diff = Date.now() - new Date(d).getTime();
+    const m = Math.floor(diff/60000), h = Math.floor(m/60), day = Math.floor(h/24), w = Math.floor(day/7);
+    if (w)   return w  + 'w ago';
+    if (day) return day + 'd ago';
+    if (h)   return h  + 'h ago';
+    return m + 'm ago';
+  }
+
+  function fileIcon(name, isDir) {
+    if (isDir) return '◫';
+    const ext = name.split('.').pop().toLowerCase();
+    const icons = { js: '◈', css: '◉', html: '◇', md: '◎', json: '◆', xlsx: '⊞', ico: '◌', png: '◌', jpg: '◌', gif: '◌', svg: '◌' };
+    return icons[ext] || '◦';
+  }
+
+  function buildTree(items, parentPath = '', indent = 0) {
+    const atLevel = items.filter(i => {
+      const rel = i.path.slice(parentPath.length).replace(/^\//, '');
+      return !rel.includes('/') && (parentPath === '' || i.path.startsWith(parentPath + '/'));
+    });
+
+    return atLevel.map(item => {
+      const isDir = item.type === 'tree';
+      const name  = item.path.split('/').pop();
+      if (isDir) {
+        const children = items.filter(i => i.path.startsWith(item.path + '/') && i.path.slice(item.path.length + 1).split('/').length === 1);
+        const childHtml = buildTree(items, item.path, indent + 1);
+        return `
+          <div>
+            <div class="tree-item folder" onclick="toggleFolder(this)">
+              <span class="tree-icon">▶</span>
+              <span class="tree-name">${name}/</span>
+            </div>
+            <div class="tree-folder-contents">${childHtml}</div>
+          </div>`;
+      } else {
+        const sizeStr = item.size > 1024 ? (item.size/1024).toFixed(1) + 'kb' : item.size + 'b';
+        return `<a class="tree-item" href="https://github.com/${owner}/${repo}/blob/main/${item.path}" target="_blank">
+          <span class="tree-icon">${fileIcon(name, false)}</span>
+          <span class="tree-name">${name}</span>
+          <span class="tree-size">${sizeStr}</span>
+        </a>`;
+      }
+    }).join('');
+  }
+
+  function toggleFolder(el) {
+    const contents = el.nextElementSibling;
+    const icon = el.querySelector('.tree-icon');
+    contents.classList.toggle('open');
+    icon.textContent = contents.classList.contains('open') ? '▼' : '▶';
+  }
+
+  async function publishPages() {
+    const token = sessionStorage.getItem('gh_token');
+    const btn   = document.getElementById('btn-publish');
+    const status = document.getElementById('publish-status');
+    if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+    if (status) { status.style.display = 'block'; status.textContent = 'Enabling GitHub Pages…'; }
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/pages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Accept':        'application/vnd.github+json',
+          'Content-Type':  'application/json'
+        },
+        body: JSON.stringify({ source: { branch: 'main', path: '/' } })
+      });
+
+      if (!res.ok && res.status !== 409) {
+        const err = await res.json();
+        throw new Error(err.message || 'Could not enable GitHub Pages.');
+      }
+
+      // Poll until Pages is built
+      if (status) status.textContent = 'Building… this usually takes 30–60 seconds';
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 4000));
+        const poll = await fetch(`https://api.github.com/repos/${owner}/${repo}/pages`, {
+          headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+        });
+        if (poll.ok) {
+          const data = await poll.json();
+          console.log('[Rondo] Pages status:', data.status, data.html_url);
+          if (data.status === 'built' || data.html_url) {
+            const url = data.html_url || `https://${owner}.github.io/${repo}/`;
+            if (btn) {
+              btn.outerHTML = `<a class="btn btn-green" href="${url}" target="_blank">View Live Site ⊕</a>`;
+            }
+            if (status) {
+              status.textContent = `✓ Published at ${url}`;
+              status.style.color = 'var(--green)';
+            }
+            // Update status pill and live site card
+            document.querySelectorAll('.status-pill').forEach(p => {
+              p.className = 'status-pill pill-live';
+              p.textContent = '● Published';
+            });
+            return;
+          }
+        }
+      }
+      if (status) status.textContent = 'Still building — check GitHub Pages settings in a minute.';
+
+    } catch(err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Publish to GitHub Pages ⊕'; }
+      if (status) { status.textContent = '⚠ ' + err.message; status.style.color = 'var(--red)'; }
+    }
+  }
+
+  async function load() {
+    try {
+      const h = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+
+      // Fetch in parallel
+      const [repoRes, commitsRes, treeRes, rondoJsRes, pagesRes] = await Promise.all([
+        fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: h }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=8`, { headers: h }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`, { headers: h }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/contents/rondo.js`, { headers: h }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/pages`, { headers: h }),
+      ]);
+
+      if (!repoRes.ok) throw new Error('Repository not found or no access.');
+
+      const repoData    = await repoRes.json();
+      const commitsData = commitsRes.ok ? await commitsRes.json() : [];
+      const treeData    = treeRes.ok    ? await treeRes.json()    : { tree: [] };
+
+      // Extract spreadsheet ID from rondo.js
+      let sheetId  = null;
+      let sheetUrl = null;
+      if (rondoJsRes.ok) {
+        const rondoJsData = await rondoJsRes.json();
+        const rondoJs     = atob(rondoJsData.content.replace(/\n/g, ''));
+        const sheetMatch  = rondoJs.match(/var spreadsheetID\s*=\s*["']([^"']+)["']/);
+        if (sheetMatch) {
+          sheetId  = sheetMatch[1];
+          sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+        }
+      }
+
+      // Check GitHub Pages status
+      let pagesEnabled = false;
+      let pagesUrl     = null;
+      if (pagesRes.ok) {
+        const pagesData = await pagesRes.json();
+        pagesEnabled = pagesData.status === 'built' || pagesData.status === 'building';
+        pagesUrl     = pagesData.html_url || `https://${owner}.github.io/${repo}/`;
+      }
+
+      // Topbar
+      document.getElementById('topbar-repo').textContent = repo;
+      document.getElementById('btn-open-repo').href = repoData.html_url;
+      document.title = `${repo} / Rondo`;
+
+      const isLive   = !repoData.private;
+      const type     = repo.includes('360') ? 'rondo-360' : 'rondo';
+      const siteUrl  = repoData.homepage || `https://${owner}.github.io/${repo}/`;
+      const fileCount = treeData.tree.filter(i => i.type === 'blob').length;
+
+      // Build page
+      document.getElementById('main-content').innerHTML = `
+
+        <div class="hero">
+          <div class="hero-left">
+            <div class="hero-type">
+              <span class="type-dot"></span>
+              ${type === 'rondo-360' ? 'Rondo 360 · Immersive Exhibit' : 'Rondo · Standard Exhibit'}
+            </div>
+            <h1 class="hero-title">${repoData.name.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/(\w+)/g, m => m.length > 3 ? '<em>' + m + '</em>' : m)}</h1>
+            <p class="hero-desc">${repoData.description || 'No description. Add one in GitHub repository settings.'}</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="${repoData.html_url}" target="_blank">Open in GitHub ↗</a>
+              ${pagesEnabled
+                ? `<a class="btn btn-green" href="${pagesUrl}" target="_blank">View Live Site ⊕</a>`
+                : `<button class="btn btn-green" id="btn-publish" onclick="publishPages()">Publish to GitHub Pages ⊕</button>`
+              }
+              <a class="btn btn-ghost" href="new-exhibit-modal.html">+ New Exhibit</a>
+            </div>
+            <div id="publish-status" style="margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--muted);display:none;"></div>
+          </div>
+          <div class="hero-right">
+            <div class="meta-card">
+              <div class="meta-label">Status</div>
+              <div class="meta-value">
+                ${pagesEnabled
+                  ? `<span class="status-pill pill-live">● Published</span>`
+                  : `<span class="status-pill pill-draft">◆ Not Published</span>`
+                }
+              </div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-label">Repository</div>
+              <div class="meta-value"><a href="${repoData.html_url}" target="_blank">${owner}/${repo}</a></div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-label">Live Site</div>
+              <div class="meta-value">
+                ${pagesEnabled
+                  ? `<a href="${pagesUrl}" target="_blank">${pagesUrl.replace('https://','')}</a>`
+                  : `<span style="color:var(--faint)">Not published yet</span>`
+                }
+              </div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-label">Last Updated</div>
+              <div class="meta-value">${timeAgo(repoData.updated_at)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Files</div>
+            <div class="stat-value">${fileCount}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Commits</div>
+            <div class="stat-value">${commitsData.length || '—'}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Stars</div>
+            <div class="stat-value">${repoData.stargazers_count}</div>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="content-grid">
+          <div>
+            <!-- File Tree -->
+            <div class="panel" style="margin-bottom:20px">
+              <div class="panel-head">
+                <span class="panel-title">Files</span>
+                <span class="panel-meta">${fileCount} files · ${repoData.default_branch}</span>
+              </div>
+              <div class="file-tree">
+                ${buildTree(treeData.tree.filter(i => !i.path.startsWith('.')), '')}
+              </div>
+            </div>
+
+            <!-- Commits -->
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">Recent Commits</span>
+                <a href="${repoData.html_url}/commits" target="_blank" style="font-size:10px;color:var(--faint);text-decoration:none;">View all ↗</a>
+              </div>
+              <div class="commit-list">
+                ${commitsData.length ? commitsData.map(c => `
+                  <a class="commit-item" href="${repoData.html_url}/commit/${c.sha}" target="_blank" style="text-decoration:none;color:inherit;display:flex;gap:12px;align-items:flex-start;padding:12px 18px;border-bottom:1px solid var(--border);">
+                    <div class="commit-dot mine"></div>
+                    <div class="commit-info">
+                      <div class="commit-msg">${c.commit.message.split('\n')[0]}</div>
+                      <div class="commit-sub">${c.commit.author.name} · ${timeAgo(c.commit.author.date)}</div>
+                    </div>
+                    <div class="commit-sha">${c.sha.slice(0,7)}</div>
+                  </a>`).join('') : '<div style="padding:20px 18px;font-size:11px;color:var(--faint);">No commits yet</div>'}
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="sidebar-stack">
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">Quick Links</span></div>
+              <a class="link-item" href="${repoData.html_url}" target="_blank">
+                <span class="link-icon">◈</span>
+                <span class="link-label">Repository</span>
+                <span class="link-arrow">↗</span>
+              </a>
+              <a class="link-item" href="${siteUrl}" target="_blank">
+                <span class="link-icon">⊕</span>
+                <span class="link-label">Live Site</span>
+                <span class="link-arrow">↗</span>
+              </a>
+              <a class="link-item" href="${repoData.html_url}/settings/pages" target="_blank">
+                <span class="link-icon">◎</span>
+                <span class="link-label">GitHub Pages Settings</span>
+                <span class="link-arrow">↗</span>
+              </a>
+              <a class="link-item" href="${repoData.html_url}/blob/main/rondo.js" target="_blank">
+                <span class="link-icon">◆</span>
+                <span class="link-label">rondo.js config</span>
+                <span class="link-arrow">↗</span>
+              </a>
+              ${sheetUrl ? `<a class="link-item" href="${sheetUrl}" target="_blank">
+                <span class="link-icon">⊞</span>
+                <span class="link-label">Google Sheet</span>
+                <span class="link-arrow">↗</span>
+              </a>` : ''}
+              <a class="link-item" href="${repoData.html_url}/actions" target="_blank">
+                <span class="link-icon">◇</span>
+                <span class="link-label">Actions / Deployments</span>
+                <span class="link-arrow">↗</span>
+              </a>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">Details</span></div>
+              <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;">
+                <div>
+                  <div class="meta-label" style="margin-bottom:4px;">Template</div>
+                  <div class="meta-value">${type}</div>
+                </div>
+                <div>
+                  <div class="meta-label" style="margin-bottom:4px;">Visibility</div>
+                  <div class="meta-value">${repoData.private ? 'Private' : 'Public'}</div>
+                </div>
+                <div>
+                  <div class="meta-label" style="margin-bottom:4px;">Default Branch</div>
+                  <div class="meta-value">${repoData.default_branch}</div>
+                </div>
+                <div>
+                  <div class="meta-label" style="margin-bottom:4px;">Created</div>
+                  <div class="meta-value">${new Date(repoData.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })}</div>
+                </div>
+                ${sheetId ? `<div>
+                  <div class="meta-label" style="margin-bottom:4px;">Google Sheet ID</div>
+                  <div class="meta-value"><a href="${sheetUrl}" target="_blank" style="color:var(--blue);font-size:10px;word-break:break-all;">${sheetId}</a></div>
+                </div>` : ''}
+                <div>
+                  <div class="meta-label" style="margin-bottom:4px;">Clone URL</div>
+                  <div class="meta-value" style="font-size:10px;word-break:break-all;">${repoData.clone_url}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+    } catch(err) {
+      document.getElementById('main-content').innerHTML = `
+        <div class="error-wrap">
+          <div class="error-title">Could not load exhibit</div>
+          <div class="error-sub">${err.message}</div>
+          <a href="landing.html" class="btn btn-ghost" style="margin-top:20px;">← Back to Dashboard</a>
+        </div>`;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

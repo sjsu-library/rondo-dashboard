@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Exhibit</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f5f2;
+    --surface: #ffffff;
+    --border: #e4e0db;
+    --text: #1a1816;
+    --muted: #8a8480;
+    --faint: #c8c4c0;
+    --green: #2d7a4f;
+    --red: #c0392b;
+    --font-serif: 'Lora', Georgia, serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  body {
+    font-family: var(--font-serif);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(247,245,242,0.85) 100%);
+    pointer-events: none;
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 32px rgba(0,0,0,.06);
+    animation: rise 0.4s cubic-bezier(0.16,1,0.3,1) both;
+    overflow: hidden;
+  }
+  @keyframes rise {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* HEAD */
+  .modal-head {
+    padding: 32px 36px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .modal-head h2 { font-size: 22px; font-weight: 400; line-height: 1.3; letter-spacing: -.01em; }
+  .modal-head h2 em { font-style: italic; }
+  .modal-head p { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .btn-close { background: none; border: none; color: var(--faint); font-size: 16px; cursor: pointer; padding: 2px; line-height: 1; transition: color .15s; flex-shrink: 0; margin-top: 2px; font-family: var(--font-mono); }
+  .btn-close:hover { color: var(--text); }
+
+  /* BODY */
+  .modal-body { padding: 28px 36px; }
+  .step-label { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .12em; color: var(--faint); margin-bottom: 12px; }
+
+  /* TEMPLATE CARDS */
+  .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; }
+  .template-card { border: 1px solid var(--border); border-radius: 10px; padding: 18px 16px; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .1s; background: var(--surface); position: relative; }
+  .template-card:hover { border-color: #c8c4c0; box-shadow: 0 2px 12px rgba(0,0,0,.06); transform: translateY(-1px); }
+  .template-card.selected { border-color: var(--text); box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+  .check-circle { position: absolute; top: 12px; right: 12px; width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 9px; transition: all .15s; color: transparent; }
+  .template-card.selected .check-circle { background: var(--text); border-color: var(--text); color: #fff; }
+  .template-name { font-size: 13px; font-weight: 500; font-family: var(--font-mono); margin-bottom: 6px; margin-top: 2px; }
+  .template-desc { font-size: 11px; color: var(--muted); font-family: var(--font-mono); line-height: 1.55; }
+  .template-tag { display: inline-block; margin-top: 10px; padding: 2px 7px; border-radius: 3px; font-size: 9px; font-family: var(--font-mono); letter-spacing: .08em; text-transform: uppercase; border: 1px solid var(--border); color: var(--muted); }
+  .template-card.selected .template-tag { border-color: var(--text); color: var(--text); }
+
+  /* INPUT */
+  .form-group { margin-bottom: 4px; }
+  .form-label { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .12em; color: var(--faint); display: block; margin-bottom: 8px; }
+  .form-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px; font-size: 13px; color: var(--text); font-family: var(--font-mono); outline: none; transition: border-color .15s; }
+  .form-input:focus { border-color: #b0aca8; }
+  .form-input::placeholder { color: var(--faint); }
+
+  /* FOOTER */
+  .modal-footer { padding: 0 36px 32px; display: flex; align-items: center; gap: 10px; margin-top: 24px; }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 20px; border-radius: 7px; font-size: 12px; font-family: var(--font-mono); font-weight: 500; cursor: pointer; border: none; transition: opacity .15s, background .15s; letter-spacing: .02em; }
+  .btn-primary { background: var(--text); color: #fff; flex: 1; }
+  .btn-primary:hover { opacity: .85; }
+  .btn-primary:disabled { opacity: .3; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: #c8c4c0; }
+
+  /* PROGRESS PANEL */
+  .progress-panel { display: none; padding: 28px 36px; }
+  .progress-panel.visible { display: block; }
+
+  .progress-steps { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
+  .progress-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .progress-step:last-child { border-bottom: none; }
+
+  .step-indicator {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all .2s;
+    color: var(--faint);
+  }
+  .step-indicator.active {
+    border-color: var(--text);
+    color: var(--text);
+  }
+  .step-indicator.done {
+    background: var(--text);
+    border-color: var(--text);
+    color: #fff;
+  }
+  .step-indicator.error {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+  .step-indicator.spinning::after {
+    content: '';
+    width: 10px; height: 10px;
+    border: 1.5px solid var(--faint);
+    border-top-color: var(--text);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .step-info { flex: 1; }
+  .step-title { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .step-title.muted { color: var(--faint); }
+  .step-sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .step-sub.error { color: var(--red); }
+  .step-sub.success { color: var(--green); }
+
+  /* SHEET PASTE BOX */
+  .sheet-paste-box {
+    display: none;
+    margin-top: 10px;
+    padding: 14px;
+    background: #f9f8f6;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .sheet-paste-box.visible { display: block; }
+  .sheet-paste-box p { font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+  .sheet-paste-box p a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .paste-row { display: flex; gap: 8px; }
+  .paste-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 11px; font-family: var(--font-mono); color: var(--text); outline: none; transition: border-color .15s; }
+  .paste-input:focus { border-color: #b0aca8; }
+  .paste-input::placeholder { color: var(--faint); }
+  .btn-sm { padding: 8px 14px; border-radius: 6px; font-size: 11px; font-family: var(--font-mono); background: var(--text); color: #fff; border: none; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+  .btn-sm:hover { opacity: .85; }
+  .btn-sm:disabled { opacity: .3; cursor: not-allowed; }
+
+  /* SUCCESS STATE */
+  .success-panel { display: none; padding: 32px 36px; text-align: center; }
+  .success-panel.visible { display: block; }
+  .success-mark { font-size: 28px; margin-bottom: 14px; }
+  .success-title { font-size: 18px; font-weight: 400; margin-bottom: 6px; }
+  .success-title em { font-style: italic; }
+  .success-sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+  .success-links { display: flex; gap: 10px; justify-content: center; }
+  .link-btn { padding: 9px 18px; border-radius: 7px; font-family: var(--font-mono); font-size: 11px; cursor: pointer; text-decoration: none; transition: opacity .15s; }
+  .link-btn:hover { opacity: .8; }
+  .link-btn-primary { background: var(--text); color: #fff; border: none; }
+  .link-btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+  /* STATUS MSG */
+  .status-msg { display: none; margin-top: 16px; padding: 10px 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; line-height: 1.5; }
+  .status-msg.error { display: block; background: #fdf0ee; color: var(--red); border: 1px solid #f0c0bb; }
+</style>
+</head>
+<body>
+
+<div class="modal" id="modal">
+
+  <!-- ── STEP A: Choose + Name ── -->
+  <div id="panel-setup">
+    <div class="modal-head">
+      <div>
+        <h2>New <em>Exhibit</em></h2>
+        <p>Choose a template to get started</p>
+      </div>
+      <button class="btn-close" title="Close" onclick="window.location.href='landing.html'">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="step-label">Step 1 — Choose a template</div>
+      <div class="template-grid">
+        <div class="template-card selected" data-type="rondo" onclick="selectTemplate(this)">
+          <div class="check-circle">✓</div>
+          <div class="template-name">Rondo</div>
+          <div class="template-desc">Pages, items & Google Sheets. Standard digital exhibit.</div>
+          <span class="template-tag">Standard</span>
+        </div>
+        <div class="template-card" data-type="rondo-360" onclick="selectTemplate(this)">
+          <div class="check-circle"></div>
+          <div class="template-name">Rondo 360</div>
+          <div class="template-desc">Immersive 360° exhibit with panoramic views & media.</div>
+          <span class="template-tag">Immersive</span>
+        </div>
+      </div>
+
+      <div class="step-label">Step 2 — Name your exhibit</div>
+      <div class="form-group">
+        <input class="form-input" id="exhibit-name" type="text" placeholder="e.g. Valley Water History" oninput="checkForm()">
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btn-create" disabled onclick="startCreate()">Create Exhibit →</button>
+      <button class="btn btn-ghost" onclick="window.location.href='landing.html'">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── STEP B: Progress ── -->
+  <div id="panel-progress" style="display:none">
+    <div class="modal-head">
+      <div>
+        <h2>Setting up your <em>Exhibit</em></h2>
+        <p id="progress-subtitle">This will only take a moment</p>
+      </div>
+    </div>
+
+    <div class="progress-panel visible">
+      <div class="progress-steps">
+
+        <!-- Step 1: Fork -->
+        <div class="progress-step">
+          <div class="step-indicator spinning" id="ind-fork"></div>
+          <div class="step-info">
+            <div class="step-title" id="title-fork">Forking repository…</div>
+            <div class="step-sub" id="sub-fork">Copying the template to your GitHub account</div>
+          </div>
+        </div>
+
+        <!-- Step 2: Connect Google -->
+        <div class="progress-step">
+          <div class="step-indicator" id="ind-google">2</div>
+          <div class="step-info">
+            <div class="step-title muted" id="title-google">Connect Google Account</div>
+            <div class="step-sub" id="sub-google">Needed to auto-share your Sheet</div>
+            <div id="google-connect-box" style="display:none; margin-top:10px;">
+              <button onclick="connectGoogle()" style="display:flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--font-mono);font-size:12px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#b0aca8'" onmouseout="this.style.borderColor='var(--border)'">
+                <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Connect Google Account
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Sheet -->
+        <div class="progress-step">
+          <div class="step-indicator" id="ind-sheet">3</div>
+          <div class="step-info">
+            <div class="step-title muted" id="title-sheet">Copy Google Sheet</div>
+            <div class="step-sub" id="sub-sheet">Make a copy of the data template</div>
+
+            <!-- Paste box — shown after fork is done -->
+            <div class="sheet-paste-box" id="sheet-paste-box">
+              <p>
+                A Google Sheet template has opened in a new tab.<br>
+                Sign in with <strong>any Google account</strong>, then click <strong>File → Make a copy</strong>.<br>
+                Paste the URL of your new copy below.
+                <br><br>
+                <a onclick="openSheetCopy()">↗ Re-open the Sheet template</a>
+              </p>
+              <div class="paste-row">
+                <input class="paste-input" id="sheet-url-input" type="text" placeholder="Paste your new Sheet URL here…" oninput="checkSheetUrl(); updateShareLink();">
+                <button class="btn-sm" id="btn-confirm-sheet" disabled onclick="confirmSheet()">Confirm</button>
+              </div>
+              <div id="share-reminder" style="display:none; margin-top:10px; padding:10px 12px; background:#fff8ed; border:1px solid #f0ddb0; border-radius:6px;">
+                <span style="font-size:11px; color:#8a6a00;">⚠ Make sure your sheet is public — </span>
+                <a id="share-link" href="#" target="_blank" style="font-size:11px; color:#8a6a00; font-weight:500; text-decoration:underline; text-underline-offset:3px;">Open sharing settings ↗</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Update rondo.js -->
+        <div class="progress-step">
+          <div class="step-indicator" id="ind-update">4</div>
+          <div class="step-info">
+            <div class="step-title muted" id="title-update">Update rondo.js</div>
+            <div class="step-sub" id="sub-update">Connect your Sheet to the exhibit</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="status-msg" id="status-msg"></div>
+    </div>
+  </div>
+
+  <!-- ── STEP C: Success ── -->
+  <div id="panel-success" style="display:none">
+    <div class="modal-head" style="border-bottom:none;padding-bottom:0">
+      <div></div>
+      <button class="btn-close" onclick="resetModal()">✕</button>
+    </div>
+    <div class="success-panel visible">
+      <div class="success-mark">✓</div>
+      <div class="success-title">Your <em>Exhibit</em> is ready</div>
+      <p class="success-sub" id="success-sub">Repository forked and connected to your Google Sheet.</p>
+      <div class="success-links">
+        <a class="link-btn link-btn-primary" id="link-repo" href="#" target="_blank">View Repository →</a>
+        <a class="link-btn link-btn-ghost" onclick="window.location.href='landing.html'">Done</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ══════════════════════════════════════════════════════════════════════════
+  // TEMPLATE LIST — add new templates here, they appear as cards automatically
+  // Each repo MUST be marked as a Template Repository in GitHub Settings
+  // ══════════════════════════════════════════════════════════════════════════
+  const TEMPLATE_LIST = [
+    {
+      id:           'rondo',
+      label:        'Rondo',
+      tag:          'Standard',
+      desc:         'Pages, items & Google Sheets. Standard digital exhibit.',
+      repo:         'sjsu-library/rondo',
+      sheetCopyUrl: 'https://docs.google.com/spreadsheets/d/1iwIx8sqiBTqbtAI7TX4vDGDVee3dPz0wa3MazBv2fzQ/copy',
+    },
+    {
+      id:           'rondo-360',
+      label:        'Rondo 360',
+      tag:          'Immersive',
+      desc:         'Immersive 360° exhibit with panoramic views & media.',
+      repo:         'sjsu-library/rondo-360',
+      sheetCopyUrl: 'https://docs.google.com/spreadsheets/d/1KhXNef0QJj48RL1NwmSPaNL9nx0aj_pB10EtzeOZy5w/copy',
+    },
+    // ── Add more templates here in future ──
+    // {
+    //   id:           'rondo-audio',
+    //   label:        'Rondo Audio',
+    //   tag:          'Audio',
+    //   desc:         'Audio-first exhibit.',
+    //   repo:         'sjsu-library/rondo-audio',
+    //   sheetCopyUrl: 'https://docs.google.com/spreadsheets/d/YOUR_ID/copy',
+    // },
+  ];
+  // Build lookup map — do not edit below
+  const TEMPLATES = Object.fromEntries(TEMPLATE_LIST.map(t => [t.id, t]));
+  // ══════════════════════════════════════════════════════════════════════════
+
+  let selectedType = TEMPLATE_LIST[0].id;
+  let exhibitName  = '';
+  let forkedRepo   = null;
+  let sheetId      = null;
+
+  // ── UI helpers ──
+  function selectTemplate(card) {
+    document.querySelectorAll('.template-card').forEach(c => {
+      c.classList.remove('selected');
+      c.querySelector('.check-circle').textContent = '';
+    });
+    card.classList.add('selected');
+    card.querySelector('.check-circle').textContent = '✓';
+    selectedType = card.dataset.type;
+    console.log('[Rondo] selectedType =', selectedType, '| repo =', TEMPLATES[selectedType]?.repo);
+    checkForm();
+  }
+
+  function checkForm() {
+    const name = document.getElementById('exhibit-name').value.trim();
+    document.getElementById('btn-create').disabled = !name;
+  }
+
+  function setStep(id, state, sub) {
+    const ind     = document.getElementById('ind-'   + id);
+    const titleEl = document.getElementById('title-' + id);
+    const subEl   = document.getElementById('sub-'   + id);
+
+    ind.className = 'step-indicator';
+    if      (state === 'spinning') ind.classList.add('spinning');
+    else if (state === 'done')   { ind.classList.add('done');  ind.textContent = '✓'; }
+    else if (state === 'error')  { ind.classList.add('error'); ind.textContent = '✕'; }
+    else if (state === 'wait')   { ind.textContent = { fork:'1', google:'2', sheet:'3', update:'4' }[id]; }
+    else if (state === 'active') { ind.classList.add('active'); ind.textContent = { fork:'1', google:'2', sheet:'3', update:'4' }[id]; }
+
+    if (titleEl) titleEl.className = 'step-title' + (state === 'wait' ? ' muted' : '');
+    if (sub && subEl) {
+      subEl.textContent = sub;
+      subEl.className   = 'step-sub' + (state === 'error' ? ' error' : state === 'done' ? ' success' : '');
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('status-msg');
+    el.className  = 'status-msg error';
+    el.textContent = '⚠ ' + msg;
+  }
+
+  // ── MAIN FLOW ──
+  async function startCreate() {
+    // Snapshot everything before any async work
+    const tpl      = TEMPLATES[selectedType];
+    exhibitName    = document.getElementById('exhibit-name').value.trim();
+    const token    = sessionStorage.getItem('gh_token');
+    const repoName = exhibitName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    if (!tpl)   { alert('No template selected.'); return; }
+    if (!token) { alert('GitHub token not found. Please reconnect.'); return; }
+
+    console.log('[Rondo] Creating:', repoName, '| template:', tpl.repo);
+
+    document.getElementById('panel-setup').style.display    = 'none';
+    document.getElementById('panel-progress').style.display = 'block';
+    setStep('fork',   'spinning', `Creating from ${tpl.label} template…`);
+    setStep('google', 'wait');
+    setStep('sheet',  'wait');
+    setStep('update', 'wait');
+
+    try {
+      // ── Get authenticated user ──
+      const userRes = await fetch('https://api.github.com/user', {
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+      });
+      if (!userRes.ok) throw new Error('Could not fetch GitHub user.');
+      const ghUser = (await userRes.json()).login;
+
+      // ── Check target name isn't already taken ──
+      const takenRes = await fetch(`https://api.github.com/repos/${ghUser}/${repoName}`, {
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+      });
+      if (takenRes.ok) throw new Error(`A repo named "${repoName}" already exists. Choose a different exhibit name.`);
+
+      const [srcOwner, srcRepo] = tpl.repo.split('/');
+
+      // ── Step 1: Create a fresh empty repo ──
+      setStep('fork', 'spinning', `Creating repository…`);
+      const createRes = await fetch('https://api.github.com/user/repos', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:        repoName,
+          description: `Rondo exhibit: ${exhibitName} [${tpl.id}]`,
+          private:     false,
+          auto_init:   true  // creates initial commit so git DB is ready for blob uploads
+        })
+      });
+      if (!createRes.ok) {
+        const e = await createRes.json();
+        throw new Error(e.message || 'Could not create repository.');
+      }
+      const newRepo = await createRes.json();
+      console.log('[Rondo] Repo created:', newRepo.html_url);
+
+      // Wait for GitHub to fully initialise the repo's git database before pushing blobs
+      await delay(5000);
+
+      // ── Step 2: Copy files directly from source repo via Contents API ──
+      // This reads exactly what is in sjsu-library/rondo (or rondo-360),
+      // ignoring any fork lineage, and pushes those exact files into the new repo.
+      setStep('fork', 'spinning', `Copying files from ${tpl.repo}…`);
+
+      // Get the source tree
+      const srcBranchRes = await fetch(
+        `https://api.github.com/repos/${srcOwner}/${srcRepo}/git/ref/heads/main`,
+        { headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' } }
+      );
+      if (!srcBranchRes.ok) throw new Error('Could not read source branch.');
+      const srcCommitSha = (await srcBranchRes.json()).object.sha;
+
+      const srcTreeRes = await fetch(
+        `https://api.github.com/repos/${srcOwner}/${srcRepo}/git/trees/${srcCommitSha}?recursive=1`,
+        { headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' } }
+      );
+      if (!srcTreeRes.ok) throw new Error('Could not read source file tree.');
+      const srcBlobs = (await srcTreeRes.json()).tree.filter(i => i.type === 'blob');
+      console.log('[Rondo] Copying', srcBlobs.length, 'files from', tpl.repo);
+
+      // Download each file from raw.githubusercontent.com and upload to new repo
+      const newTreeItems = [];
+      for (const item of srcBlobs) {
+        const rawUrl = `https://raw.githubusercontent.com/${srcOwner}/${srcRepo}/${srcCommitSha}/${item.path}`;
+        const rawRes = await fetch(rawUrl);
+        if (!rawRes.ok) { console.warn('[Rondo] skip:', item.path); continue; }
+        const buf    = await rawRes.arrayBuffer();
+        const bytes  = new Uint8Array(buf);
+        let binary   = '';
+        for (let b of bytes) binary += String.fromCharCode(b);
+        const b64 = btoa(binary);
+
+        const blobRes = await fetch(`https://api.github.com/repos/${ghUser}/${repoName}/git/blobs`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: b64, encoding: 'base64' })
+        });
+        if (!blobRes.ok) {
+          const e = await blobRes.json();
+          console.warn('[Rondo] blob upload failed:', item.path, blobRes.status, e.message);
+          continue;
+        }
+        newTreeItems.push({ path: item.path, mode: item.mode, type: 'blob', sha: (await blobRes.json()).sha });
+      }
+      if (!newTreeItems.length) throw new Error('No files could be copied from the template.');
+
+      // Create tree → commit → set main branch
+      const newTreeRes = await fetch(`https://api.github.com/repos/${ghUser}/${repoName}/git/trees`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tree: newTreeItems })
+      });
+      if (!newTreeRes.ok) throw new Error('Could not create file tree.');
+      const newTreeSha = (await newTreeRes.json()).sha;
+
+      // Get the current HEAD commit SHA (from auto_init) to use as parent
+      const headRes = await fetch(`https://api.github.com/repos/${ghUser}/${repoName}/git/ref/heads/main`, {
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+      });
+      const headSha = headRes.ok ? (await headRes.json()).object.sha : null;
+
+      const commitRes = await fetch(`https://api.github.com/repos/${ghUser}/${repoName}/git/commits`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Initialize from ${tpl.repo}`,
+          tree:    newTreeSha,
+          parents: headSha ? [headSha] : []
+        })
+      });
+      if (!commitRes.ok) throw new Error('Could not create initial commit.');
+      const commitSha = (await commitRes.json()).sha;
+
+      // Update main branch to point at our new commit
+      const refRes = await fetch(`https://api.github.com/repos/${ghUser}/${repoName}/git/refs/heads/main`, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sha: commitSha, force: true })
+      });
+      if (!refRes.ok) throw new Error('Could not update main branch.');
+
+      forkedRepo = { owner: ghUser, name: repoName, html_url: newRepo.html_url };
+      console.log('[Rondo] Done — files copied:', newTreeItems.length);
+      setStep('fork', 'done', `Created ${forkedRepo.owner}/${forkedRepo.name}`);
+
+      // ── Step 2: Connect Google Account ──
+      setStep('google', 'active', 'Click below to connect your Google account');
+      document.getElementById('google-connect-box').style.display = 'block';
+
+    } catch(err) {
+      console.error('[Rondo] Error:', err);
+      setStep('fork', 'error', err.message);
+      showError(err.message);
+    }
+  }
+
+  function openSheetCopy() {
+    const tpl = TEMPLATES[selectedType];
+    window.open(tpl.sheetCopyUrl, '_blank');
+  }
+
+  function updateShareLink() {
+    const val     = document.getElementById('sheet-url-input').value.trim();
+    const id      = extractSheetId(val);
+    const reminder = document.getElementById('share-reminder');
+    const link     = document.getElementById('share-link');
+    if (id && reminder && link) {
+      link.href = `https://docs.google.com/spreadsheets/d/${id}/edit#sharing`;
+      reminder.style.display = 'block';
+    } else if (reminder) {
+      reminder.style.display = 'none';
+    }
+  }
+
+  function checkSheetUrl() {
+    const val = document.getElementById('sheet-url-input').value.trim();
+    document.getElementById('btn-confirm-sheet').disabled = !extractSheetId(val);
+  }
+
+  function extractSheetId(url) {
+    const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    return m ? m[1] : null;
+  }
+
+  async function confirmSheet() {
+    const url   = document.getElementById('sheet-url-input').value.trim();
+    sheetId     = extractSheetId(url);
+    if (!sheetId) return;
+
+    const token = sessionStorage.getItem('gh_token');
+
+    setStep('sheet', 'done', 'Google Sheet connected');
+    document.getElementById('sheet-paste-box').classList.remove('visible');
+    setStep('update', 'spinning', 'Updating rondo.js with your Sheet ID…');
+
+    try {
+      // Auto-share the sheet so it's publicly viewable
+      await autoShareSheet(sheetId);
+      await delay(2000);
+
+      const fileRes = await fetch(
+        `https://api.github.com/repos/${forkedRepo.owner}/${forkedRepo.name}/contents/rondo.js`,
+        { headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' } }
+      );
+      if (!fileRes.ok) throw new Error('Could not read rondo.js — the repo may still be initialising. Try again in a moment.');
+      const fileData = await fileRes.json();
+
+      let fileContent = atob(fileData.content.replace(/\n/g, ''));
+      fileContent = fileContent.replace(
+        /var spreadsheetID\s*=\s*["'][^"']*["']/,
+        `var spreadsheetID = "${sheetId}"`
+      );
+      const encoded = btoa(unescape(encodeURIComponent(fileContent)));
+
+      const updateRes = await fetch(
+        `https://api.github.com/repos/${forkedRepo.owner}/${forkedRepo.name}/contents/rondo.js`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Accept':        'application/vnd.github+json',
+            'Content-Type':  'application/json'
+          },
+          body: JSON.stringify({
+            message: `Connect Google Sheet for ${exhibitName}`,
+            content: encoded,
+            sha:     fileData.sha
+          })
+        }
+      );
+      if (!updateRes.ok) {
+        const err = await updateRes.json();
+        throw new Error(err.message || 'Failed to update rondo.js');
+      }
+
+      setStep('update', 'done', 'rondo.js updated successfully');
+      await delay(600);
+
+      document.getElementById('link-repo').href           = forkedRepo.html_url;
+      document.getElementById('success-sub').textContent  =
+        `"${exhibitName}" is ready at ${forkedRepo.owner}/${forkedRepo.name}, connected to your Google Sheet.`;
+      document.getElementById('panel-progress').style.display = 'none';
+      document.getElementById('panel-success').style.display  = 'block';
+
+    } catch(err) {
+      setStep('update', 'error', err.message);
+      showError(err.message);
+    }
+  }
+
+  function resetModal() {
+    document.getElementById('panel-setup').style.display    = 'block';
+    document.getElementById('panel-progress').style.display = 'none';
+    document.getElementById('panel-success').style.display  = 'none';
+    document.getElementById('exhibit-name').value           = '';
+    document.getElementById('sheet-url-input').value        = '';
+    document.getElementById('sheet-paste-box').classList.remove('visible');
+    document.getElementById('status-msg').className         = 'status-msg';
+    document.getElementById('btn-create').disabled          = true;
+    forkedRepo   = null;
+    sheetId      = null;
+    selectedType = TEMPLATE_LIST[0].id;
+    document.querySelectorAll('.template-card').forEach(c => {
+      c.classList.remove('selected');
+      c.querySelector('.check-circle').textContent = '';
+    });
+    const defaultCard = document.querySelector(`.template-card[data-type="${TEMPLATE_LIST[0].id}"]`);
+    if (defaultCard) {
+      defaultCard.classList.add('selected');
+      defaultCard.querySelector('.check-circle').textContent = '✓';
+    }
+    setStep('fork',   'wait');
+    setStep('google', 'wait');
+    setStep('sheet',  'wait');
+    setStep('update', 'wait');
+  }
+
+  const GOOGLE_CLIENT_ID = '925893232200-gpgk6uibq6pdulqfo4jl36q06ipfkjp2.apps.googleusercontent.com';
+  let googleToken = null;
+
+  function connectGoogle() {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope:     'https://www.googleapis.com/auth/drive.file',
+      callback:  async (resp) => {
+        if (resp.error) {
+          setStep('google', 'error', 'Google sign-in failed. ' + resp.error);
+          return;
+        }
+        googleToken = resp.access_token;
+        sessionStorage.setItem('google_token', googleToken);
+
+        // Mark google step done, move to sheet step
+        document.getElementById('google-connect-box').style.display = 'none';
+        setStep('google', 'done', 'Google account connected');
+
+        // Open sheet copy
+        setStep('sheet', 'active', 'Opening the Google Sheet template…');
+        await delay(400);
+        window.open(TEMPLATES[selectedType].sheetCopyUrl, '_blank');
+        document.getElementById('sheet-paste-box').classList.add('visible');
+        document.getElementById('sub-sheet').textContent = 'Paste your new Sheet URL below once copied';
+      }
+    });
+    client.requestAccessToken();
+  }
+
+  async function autoShareSheet(sheetId) {
+    const token = googleToken || sessionStorage.getItem('google_token');
+    if (!token) return; // no google token, skip silently
+    try {
+      await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}/permissions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type':  'application/json'
+        },
+        body: JSON.stringify({ role: 'reader', type: 'anyone' })
+      });
+      console.log('[Rondo] Sheet auto-shared successfully');
+    } catch(e) {
+      console.warn('[Rondo] Could not auto-share sheet:', e);
+    }
+  }
+
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>

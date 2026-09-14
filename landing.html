@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rondo / Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:          #f7f5f2;
+    --surface:     #ffffff;
+    --sidebar-bg:  #f2f0ed;
+    --border:      #e4e0db;
+    --border-med:  #d4d0cb;
+    --text:        #1a1816;
+    --muted:       #8a8480;
+    --faint:       #c8c4c0;
+    --green:       #2d7a4f;
+    --red:         #c0392b;
+    --blue:        #2c5faa;
+    --yellow-bg:   #1a1816;
+    --font-serif:  'Lora', Georgia, serif;
+    --font-mono:   'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 4px; font-size: 14px; }
+  .topbar-brand { font-family: var(--font-serif); font-weight: 500; color: var(--text); cursor: pointer; }
+  .topbar-sep   { color: var(--faint); font-family: var(--font-mono); }
+  .topbar-page  { font-family: var(--font-serif); font-style: italic; color: var(--muted); font-size: 14px; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .topbar-user  { font-size: 11px; color: var(--faint); margin-right: 4px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 6px;
+    font-size: 11px; font-family: var(--font-mono); font-weight: 500;
+    cursor: pointer; border: none; text-decoration: none;
+    transition: opacity .15s, background .15s;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: .82; }
+  .btn-ghost     { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border-med); }
+  .btn-primary   { background: var(--text); color: #fff; }
+
+  /* ── LAYOUT ── */
+  .layout { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 190px; flex-shrink: 0;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 22px 0;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 26px;
+  }
+  .sidebar-section { padding: 0 14px; }
+  .sidebar-label {
+    font-size: 9px; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 6px; padding: 0 6px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 8px; border-radius: 5px;
+    font-size: 12px; color: var(--muted);
+    cursor: pointer; transition: background .12s, color .12s; user-select: none;
+  }
+  .sidebar-item:hover  { background: var(--border); color: var(--text); }
+  .sidebar-item.active { background: var(--border); color: var(--text); }
+  .sidebar-item-left   { display: flex; align-items: center; gap: 8px; }
+  .si-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .si-dot.green  { background: var(--green); }
+  .si-dot.red    { background: var(--red); }
+  .si-dot.gray   { background: var(--faint); }
+  .si-badge { font-size: 10px; color: var(--faint); }
+
+  /* ── MAIN ── */
+  .main { flex: 1; overflow-y: auto; padding: 32px 36px; }
+
+  /* page header */
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+  .page-title  { font-family: var(--font-serif); font-size: 30px; font-weight: 400; line-height: 1.2; }
+  .page-title em { font-style: italic; }
+  .page-sub    { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 26px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px 22px;
+  }
+  .stat-label { font-size: 9px; letter-spacing: .13em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
+  .stat-value { font-size: 38px; font-weight: 400; font-family: var(--font-serif); line-height: 1; margin-bottom: 8px; }
+  .stat-value.attention { color: var(--red); }
+  .stat-meta  { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .stat-meta .up { color: var(--green); }
+  .stat-meta.error-meta { color: var(--red); }
+
+  /* ── FILTERS ── */
+  .filters { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .search-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 12px; flex: 1; max-width: 300px;
+    transition: border-color .15s;
+  }
+  .search-wrap:focus-within { border-color: var(--border-med); }
+  .search-wrap input { background: none; border: none; outline: none; font-size: 11px; font-family: var(--font-mono); color: var(--text); width: 100%; }
+  .search-wrap input::placeholder { color: var(--faint); }
+  .filter-pill {
+    padding: 6px 14px; border-radius: 6px; font-size: 11px; font-family: var(--font-mono);
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    cursor: pointer; transition: all .15s;
+  }
+  .filter-pill:hover, .filter-pill.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+  /* ── CARDS GRID ── */
+  .exhibits-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .exhibits-list { display: flex; flex-direction: column; gap: 8px; }
+
+  /* grid card */
+  .exhibit-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; cursor: pointer;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+  }
+  .exhibit-card:hover { border-color: var(--border-med); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+
+  .exhibit-thumb {
+    height: 150px; display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .thumb-hist { background: linear-gradient(135deg, #e8f2ec, #d4e8dc); }
+  .thumb-art  { background: linear-gradient(135deg, #e8eaf5, #d4d8ee); }
+  .thumb-env  { background: linear-gradient(135deg, #f5e8e8, #eed4d4); }
+  .thumb-oral { background: linear-gradient(135deg, #e8f0f5, #d4e4ee); }
+  .thumb-def  { background: linear-gradient(135deg, #f0ede8, #e8e4dc); }
+
+  .thumb-watermark {
+    font-family: var(--font-mono); font-size: 48px; font-weight: 500;
+    letter-spacing: .08em; color: rgba(26,24,22,.06); user-select: none;
+  }
+
+  .status-badge {
+    position: absolute; top: 12px; left: 12px;
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 9px; border-radius: 4px;
+    font-size: 9px; letter-spacing: .1em; text-transform: uppercase; font-weight: 500;
+  }
+  .badge-live  { background: rgba(45,122,79,.1);   color: var(--green); border: 1px solid rgba(45,122,79,.2); }
+  .badge-error { background: rgba(192,57,43,.08);  color: var(--red);   border: 1px solid rgba(192,57,43,.2); }
+  .badge-draft { background: rgba(44,95,170,.08);  color: var(--blue);  border: 1px solid rgba(44,95,170,.2); }
+  .badge-local { background: rgba(138,132,128,.08); color: var(--muted); border: 1px solid var(--border); }
+
+  .exhibit-body { padding: 16px 18px 14px; }
+  .exhibit-title { font-family: var(--font-serif); font-size: 15px; font-weight: 500; margin-bottom: 5px; }
+  .exhibit-desc  { font-size: 10px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+  .exhibit-meta  { display: flex; align-items: center; gap: 12px; font-size: 10px; color: var(--faint); margin-bottom: 10px; }
+  .exhibit-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .exhibit-url { font-size: 10px; color: var(--faint); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .foot-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; background: transparent; border: none; cursor: pointer;
+    color: var(--faint); font-size: 13px; transition: background .12s, color .12s;
+  }
+  .icon-btn:hover { background: var(--border); color: var(--text); }
+
+  /* list card */
+  .list-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 18px;
+    display: flex; align-items: center; gap: 16px; cursor: pointer;
+    transition: border-color .15s;
+  }
+  .list-card:hover { border-color: var(--border-med); }
+  .list-thumb { width: 44px; height: 44px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .list-thumb span { font-size: 9px; font-family: var(--font-mono); color: rgba(26,24,22,.2); font-weight: 500; }
+  .list-info { flex: 1; min-width: 0; }
+  .list-title { font-family: var(--font-serif); font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .list-desc  { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-meta  { font-size: 10px; color: var(--faint); display: flex; flex-direction: column; gap: 2px; align-items: flex-end; flex-shrink: 0; }
+
+  /* empty */
+  .empty-state { grid-column: 1/-1; text-align: center; padding: 64px 20px; }
+  .empty-state h3 { font-family: var(--font-serif); font-size: 18px; font-weight: 400; margin-bottom: 8px; color: var(--muted); }
+  .empty-state p  { font-size: 11px; color: var(--faint); margin-bottom: 20px; }
+
+  /* loading */
+  #loading-state { text-align: center; padding: 64px 20px; font-size: 11px; color: var(--faint); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--text); border-radius: 8px; padding: 12px 18px;
+    font-size: 11px; color: #fff;
+    z-index: 200; transform: translateY(10px); opacity: 0;
+    transition: all .25s; pointer-events: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-brand">Rondo</span>
+    <span class="topbar-sep">&nbsp;/&nbsp;</span>
+    <span class="topbar-page">Dashboard</span>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="topbar-user"></span>
+    <button class="btn btn-ghost" onclick="logout()">Disconnect</button>
+    <button class="btn btn-secondary" onclick="showToast('Import coming soon')">↑ Import Exhibit</button>
+    <button class="btn btn-primary" onclick="window.location.href='new-exhibit-modal.html'">+ New Exhibit</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Views</div>
+      <div class="sidebar-item active" id="nav-all" onclick="setFilter('all','nav-all')">
+        <div class="sidebar-item-left">
+          <span>▦</span> All Exhibits
+        </div>
+        <span class="si-badge" id="badge-all">0</span>
+      </div>
+      <div class="sidebar-item" id="nav-live" onclick="setFilter('live','nav-live')">
+        <div class="sidebar-item-left">
+          <span class="si-dot green"></span> Live
+        </div>
+        <span class="si-badge" id="badge-live">0</span>
+      </div>
+      <div class="sidebar-item" id="nav-draft" onclick="setFilter('draft','nav-draft')">
+        <div class="sidebar-item-left">
+          <span class="si-dot gray"></span> Draft
+        </div>
+        <span class="si-badge" id="badge-draft">0</span>
+      </div>
+      <div class="sidebar-item" id="nav-error" onclick="setFilter('error','nav-error')">
+        <div class="sidebar-item-left">
+          <span class="si-dot red"></span> Errors
+        </div>
+        <span class="si-badge" id="badge-error">0</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Collections</div>
+      <div class="sidebar-item" id="nav-rondo" onclick="setFilter('rondo','nav-rondo')">
+        <div class="sidebar-item-left">◈ Rondo</div>
+      </div>
+      <div class="sidebar-item" id="nav-rondo360" onclick="setFilter('rondo-360','nav-rondo360')">
+        <div class="sidebar-item-left">◉ Rondo 360</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick Actions</div>
+      <div class="sidebar-item" onclick="showToast('Bulk link check coming soon')">
+        <div class="sidebar-item-left">⛓ Bulk Link Check</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Your <em id="page-heading">Exhibits</em></h1>
+        <p class="page-sub" id="page-sub">Manage, monitor, and launch all your Rondo digital exhibits from one place.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="btn-view" onclick="toggleView()">≡ List View</button>
+        <button class="btn btn-ghost" onclick="window.open('https://github.com','_blank')">↗ Open All</button>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Exhibits</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-meta"><span class="up">↑</span> <span id="stat-total-sub">loading…</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Live &amp; Public</div>
+        <div class="stat-value" id="stat-live">—</div>
+        <div class="stat-meta">Hosted on GitHub Pages</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rondo / 360</div>
+        <div class="stat-value" id="stat-split">—</div>
+        <div class="stat-meta">Across all collections</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Needs Attention</div>
+        <div class="stat-value attention" id="stat-attention">—</div>
+        <div class="stat-meta error-meta" id="stat-attention-sub">checking…</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="search-wrap">
+        <span style="color:var(--faint);font-size:11px">⌕</span>
+        <input type="text" id="search-input" placeholder="Search exhibits…" oninput="renderCards()">
+      </div>
+      <button class="filter-pill active" id="sort-recent" onclick="setSort('recent')">Sort: Recent ▾</button>
+      <button class="filter-pill" id="sort-alpha" onclick="setSort('alpha')">A–Z</button>
+      <button class="filter-pill active" id="view-grid" onclick="setViewMode('grid')">⊞ Grid</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-state">Loading your exhibits…</div>
+
+    <!-- Cards -->
+    <div id="cards-container" class="exhibits-grid" style="display:none"></div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<script>
+  // ── AUTH ─────────────────────────────────────────────────────────────────
+  const token = sessionStorage.getItem('gh_token');
+  if (!token) window.location.href = 'auth.html';
+
+  // ── STATE ────────────────────────────────────────────────────────────────
+  let ghUser        = null;
+  let allExhibits   = [];
+  let currentFilter = 'all';
+  let currentSort   = 'recent';
+  let viewMode      = 'grid';
+
+  // ── INIT ─────────────────────────────────────────────────────────────────
+  async function init() {
+    try {
+      const r = await fetch('https://api.github.com/user', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      ghUser = await r.json();
+      document.getElementById('topbar-user').textContent = '@' + ghUser.login;
+    } catch(e) {}
+    await loadExhibits();
+  }
+
+  async function loadExhibits() {
+    document.getElementById('loading-state').style.display = 'block';
+    document.getElementById('cards-container').style.display = 'none';
+    try {
+      const r = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const repos = await r.json();
+
+      // Show all repos that are either:
+      // (a) forked from sjsu-library/rondo or rondo-360 (old fork-based exhibits), OR
+      // (b) generated from the template (description starts with "Rondo exhibit:")
+      // Type is detected from description first, then falls back to repo name.
+      allExhibits = repos
+        .filter(r => {
+          const isRondoFork = r.fork && (
+            r.name === 'rondo' || r.name === 'rondo-360' ||
+            (r.parent && (r.parent.full_name === 'sjsu-library/rondo' || r.parent.full_name === 'sjsu-library/rondo-360'))
+          );
+          const isRondoTemplate = r.description && r.description.startsWith('Rondo exhibit:');
+          return isRondoFork || isRondoTemplate;
+        })
+        .map(r => {
+          // Detect type: check parent for forks, description for template-generated repos
+          let type = 'rondo';
+          if (r.fork && r.parent) {
+            type = r.parent.full_name === 'sjsu-library/rondo-360' ? 'rondo-360' : 'rondo';
+          } else if (r.description && r.description.includes('360')) {
+            type = 'rondo-360';
+          }
+          return {
+            id:        r.id,
+            title:     r.name.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()),
+            repoName:  r.name,
+            repoOwner: r.owner.login,
+            desc:      r.description || 'No description provided.',
+            status:    r.private ? 'draft' : 'live',
+            type:      type,
+            repoUrl:   r.html_url,
+            siteUrl:   r.homepage || null,
+            updated:   timeAgo(r.updated_at),
+          };
+        });
+
+      updateStats();
+      renderCards();
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('cards-container').style.display = viewMode === 'grid' ? 'grid' : 'flex';
+    } catch(e) {
+      document.getElementById('loading-state').textContent = 'Failed to load. Please refresh.';
+    }
+  }
+
+  function updateStats() {
+    const live    = allExhibits.filter(e => e.status === 'live').length;
+    const rondo   = allExhibits.filter(e => e.type === 'rondo').length;
+    const r360    = allExhibits.filter(e => e.type === 'rondo-360').length;
+    document.getElementById('stat-total').textContent     = allExhibits.length;
+    document.getElementById('stat-total-sub').textContent = allExhibits.length === 1 ? '1 exhibit' : allExhibits.length + ' total';
+    document.getElementById('stat-live').textContent      = live;
+    document.getElementById('stat-split').textContent     = rondo + ' / ' + r360;
+    document.getElementById('stat-attention').textContent = 0;
+    document.getElementById('stat-attention-sub').textContent = allExhibits.length ? 'All systems ok' : 'No exhibits yet';
+    document.getElementById('badge-all').textContent   = allExhibits.length;
+    document.getElementById('badge-live').textContent  = live;
+    document.getElementById('badge-draft').textContent = allExhibits.filter(e => e.status === 'draft').length;
+    document.getElementById('badge-error').textContent = 0;
+  }
+
+  // ── FILTER & RENDER ───────────────────────────────────────────────────────
+  const THUMB = { rondo: 'thumb-hist', 'rondo-360': 'thumb-art' };
+  const BADGE_CLS = { live: 'badge-live', draft: 'badge-draft', error: 'badge-error', local: 'badge-local' };
+  const BADGE_LBL = { live: '● LIVE', draft: '◆ DRAFT', error: '▲ ERROR', local: '○ LOCAL' };
+
+  function getFiltered() {
+    let data = [...allExhibits];
+    const q = document.getElementById('search-input').value.toLowerCase();
+    if (q) data = data.filter(e => e.title.toLowerCase().includes(q) || e.desc.toLowerCase().includes(q));
+    if (currentFilter === 'live')      data = data.filter(e => e.status === 'live');
+    else if (currentFilter === 'draft') data = data.filter(e => e.status === 'draft');
+    else if (currentFilter === 'error') data = data.filter(e => e.status === 'error');
+    else if (currentFilter === 'rondo') data = data.filter(e => e.type === 'rondo');
+    else if (currentFilter === 'rondo-360') data = data.filter(e => e.type === 'rondo-360');
+    if (currentSort === 'alpha') data.sort((a,b) => a.title.localeCompare(b.title));
+    return data;
+  }
+
+  function renderCards() {
+    const container = document.getElementById('cards-container');
+    const data = getFiltered();
+    container.className = viewMode === 'grid' ? 'exhibits-grid' : 'exhibits-list';
+
+    if (!data.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <h3>No exhibits yet</h3>
+          <p>Fork a Rondo template to get started.</p>
+          <button class="btn btn-primary" onclick="window.location.href='new-exhibit-modal.html'">+ New Exhibit</button>
+        </div>`;
+      return;
+    }
+
+    if (viewMode === 'grid') {
+      container.innerHTML = data.map(e => `
+        <div class="exhibit-card" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">
+          <div class="exhibit-thumb ${THUMB[e.type] || 'thumb-def'}">
+            <span class="thumb-watermark">${e.type === 'rondo-360' ? '360' : e.title.slice(0,4).toUpperCase()}</span>
+            <div class="status-badge ${BADGE_CLS[e.status]}">${BADGE_LBL[e.status]}</div>
+          </div>
+          <div class="exhibit-body">
+            <div class="exhibit-title">${e.title}</div>
+            <div class="exhibit-desc">${e.desc.slice(0,100)}${e.desc.length>100?'…':''}</div>
+            <div class="exhibit-meta">
+              <span>◈ ${e.type}</span>
+              <span>◷ ${e.updated}</span>
+            </div>
+            <div class="exhibit-footer">
+              <span class="exhibit-url">${e.repoName}</span>
+              <div class="foot-actions" onclick="event.stopPropagation()">
+                <button class="icon-btn" title="Open repo" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">↗</button>
+                ${e.siteUrl ? `<button class="icon-btn" title="Open site" onclick="window.open('${e.siteUrl}','_blank')">⊕</button>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>`).join('');
+    } else {
+      container.innerHTML = data.map(e => `
+        <div class="list-card" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">
+          <div class="list-thumb ${THUMB[e.type] || 'thumb-def'}">
+            <span>${e.type === 'rondo-360' ? '360' : 'RDO'}</span>
+          </div>
+          <div class="list-info">
+            <div class="list-title">${e.title}</div>
+            <div class="list-desc">${e.desc}</div>
+          </div>
+          <div class="list-meta">
+            <div class="status-badge ${BADGE_CLS[e.status]}" style="position:static">${BADGE_LBL[e.status]}</div>
+            <span>${e.updated}</span>
+          </div>
+          <div onclick="event.stopPropagation()">
+            <button class="icon-btn" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">↗</button>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  function setFilter(filter, navId) {
+    currentFilter = filter;
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(navId)?.classList.add('active');
+    const labels = {
+      all:        ['Exhibits',       'Manage, monitor, and launch all your Rondo digital exhibits from one place.'],
+      live:       ['Live Exhibits',  'All publicly accessible exhibits hosted on GitHub Pages.'],
+      draft:      ['Drafts',         'Private or unpublished exhibits.'],
+      error:      ['Errors',         'Exhibits that need attention.'],
+      'rondo':    ['Rondo',          'Standard Rondo exhibits.'],
+      'rondo-360':['Rondo 360',      'Immersive 360° exhibits.'],
+    };
+    const [h, s] = labels[filter] || ['Exhibits', ''];
+    document.getElementById('page-heading').textContent = h;
+    document.getElementById('page-sub').textContent     = s;
+    renderCards();
+  }
+
+  function setSort(s) {
+    currentSort = s;
+    document.getElementById('sort-recent').classList.toggle('active', s === 'recent');
+    document.getElementById('sort-alpha').classList.toggle('active',  s === 'alpha');
+    renderCards();
+  }
+
+  function setViewMode(v) {
+    viewMode = v;
+    document.getElementById('view-grid').classList.toggle('active', v === 'grid');
+    document.getElementById('btn-view').textContent = v === 'grid' ? '≡ List View' : '⊞ Grid View';
+    const container = document.getElementById('cards-container');
+    container.style.display = v === 'grid' ? 'grid' : 'flex';
+    renderCards();
+  }
+
+  function toggleView() {
+    setViewMode(viewMode === 'grid' ? 'list' : 'grid');
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────────────────────
+  function logout() { sessionStorage.removeItem('gh_token'); window.location.href = 'auth.html'; }
+
+  function timeAgo(d) {
+    const diff = Date.now() - new Date(d).getTime();
+    const m = Math.floor(diff/60000), h = Math.floor(m/60), day = Math.floor(h/24), w = Math.floor(day/7);
+    if (w)   return w  + 'w ago';
+    if (day) return day + 'd ago';
+    if (h)   return h  + 'h ago';
+    return m + 'm ago';
+  }
+
+  let toastT;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  init();
+</script>
+</body>
+</html>
