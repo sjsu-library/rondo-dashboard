@@ -13,8 +13,8 @@
     --border:     #e4e0db;
     --border-med: #d4d0cb;
     --text:       #1a1816;
-    --muted:      #8a8480;
-    --faint:      #c8c4c0;
+    --muted:      #655f58;
+    --faint:      #6d6862;
     --green:      #2d7a4f;
     --red:        #c0392b;
     --blue:       #2c5faa;
@@ -189,28 +189,36 @@
   .error-wrap { text-align: center; padding: 60px 24px; }
   .error-title { font-family: var(--font-serif); font-size: 22px; margin-bottom: 8px; }
   .error-sub { font-size: 11px; color: var(--muted); }
+
+  /* ── Accessibility ── */
+  :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .skip-link { position: absolute; left: 8px; top: -44px; z-index: 300; background: var(--text); color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 12px; text-decoration: none; transition: top .15s; }
+  .skip-link:focus { top: 8px; }
 </style>
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
 <div class="topbar">
   <div class="topbar-left">
     <a class="topbar-brand" href="landing.html">Rondo</a>
-    <span class="topbar-sep">/</span>
+    <span class="topbar-sep" aria-hidden="true">/</span>
     <span class="topbar-repo" id="topbar-repo">Loading…</span>
   </div>
   <div class="topbar-right">
     <a class="btn btn-ghost" href="landing.html">← Dashboard</a>
-    <a class="btn btn-primary" id="btn-open-repo" href="#" target="_blank">Open in GitHub ↗</a>
+    <a class="btn btn-primary" id="btn-open-repo" href="#" target="_blank" rel="noopener">Open in GitHub ↗</a>
   </div>
 </div>
 
-<div class="main" id="main-content">
-  <div class="loading-wrap" id="loading">
-    <div class="spinner"></div>
+<main class="main" id="main-content" tabindex="-1">
+  <div class="loading-wrap" id="loading" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
     <div class="loading-txt">Loading exhibit…</div>
   </div>
-</div>
+</main>
 
 <script>
   const token = sessionStorage.getItem('gh_token');
@@ -252,16 +260,16 @@
         const childHtml = buildTree(items, item.path, indent + 1);
         return `
           <div>
-            <div class="tree-item folder" onclick="toggleFolder(this)">
-              <span class="tree-icon">▶</span>
+            <div class="tree-item folder" role="button" tabindex="0" aria-expanded="false" onclick="toggleFolder(this)">
+              <span class="tree-icon" aria-hidden="true">▶</span>
               <span class="tree-name">${name}/</span>
             </div>
             <div class="tree-folder-contents">${childHtml}</div>
           </div>`;
       } else {
         const sizeStr = item.size > 1024 ? (item.size/1024).toFixed(1) + 'kb' : item.size + 'b';
-        return `<a class="tree-item" href="https://github.com/${owner}/${repo}/blob/main/${item.path}" target="_blank">
-          <span class="tree-icon">${fileIcon(name, false)}</span>
+        return `<a class="tree-item" href="https://github.com/${owner}/${repo}/blob/main/${item.path}" target="_blank" rel="noopener">
+          <span class="tree-icon" aria-hidden="true">${fileIcon(name, false)}</span>
           <span class="tree-name">${name}</span>
           <span class="tree-size">${sizeStr}</span>
         </a>`;
@@ -272,8 +280,9 @@
   function toggleFolder(el) {
     const contents = el.nextElementSibling;
     const icon = el.querySelector('.tree-icon');
-    contents.classList.toggle('open');
-    icon.textContent = contents.classList.contains('open') ? '▼' : '▶';
+    const open = contents.classList.toggle('open');
+    icon.textContent = open ? '▼' : '▶';
+    el.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
   async function publishPages() {
@@ -312,7 +321,7 @@
           if (data.status === 'built' || data.html_url) {
             const url = data.html_url || `https://${owner}.github.io/${repo}/`;
             if (btn) {
-              btn.outerHTML = `<a class="btn btn-green" href="${url}" target="_blank">View Live Site ⊕</a>`;
+              btn.outerHTML = `<a class="btn btn-green" href="${url}" target="_blank" rel="noopener">View Live Site ⊕</a>`;
             }
             if (status) {
               status.textContent = `✓ Published at ${url}`;
@@ -392,20 +401,20 @@
         <div class="hero">
           <div class="hero-left">
             <div class="hero-type">
-              <span class="type-dot"></span>
+              <span class="type-dot" aria-hidden="true"></span>
               ${type === 'rondo-360' ? 'Rondo 360 · Immersive Exhibit' : 'Rondo · Standard Exhibit'}
             </div>
             <h1 class="hero-title">${repoData.name.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/(\w+)/g, m => m.length > 3 ? '<em>' + m + '</em>' : m)}</h1>
             <p class="hero-desc">${repoData.description || 'No description. Add one in GitHub repository settings.'}</p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="${repoData.html_url}" target="_blank">Open in GitHub ↗</a>
+              <a class="btn btn-primary" href="${repoData.html_url}" target="_blank" rel="noopener">Open in GitHub ↗</a>
               ${pagesEnabled
-                ? `<a class="btn btn-green" href="${pagesUrl}" target="_blank">View Live Site ⊕</a>`
+                ? `<a class="btn btn-green" href="${pagesUrl}" target="_blank" rel="noopener">View Live Site ⊕</a>`
                 : `<button class="btn btn-green" id="btn-publish" onclick="publishPages()">Publish to GitHub Pages ⊕</button>`
               }
               <a class="btn btn-ghost" href="new-exhibit-modal.html">+ New Exhibit</a>
             </div>
-            <div id="publish-status" style="margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--muted);display:none;"></div>
+            <div id="publish-status" role="status" aria-live="polite" style="margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--muted);display:none;"></div>
           </div>
           <div class="hero-right">
             <div class="meta-card">
@@ -419,13 +428,13 @@
             </div>
             <div class="meta-card">
               <div class="meta-label">Repository</div>
-              <div class="meta-value"><a href="${repoData.html_url}" target="_blank">${owner}/${repo}</a></div>
+              <div class="meta-value"><a href="${repoData.html_url}" target="_blank" rel="noopener">${owner}/${repo}</a></div>
             </div>
             <div class="meta-card">
               <div class="meta-label">Live Site</div>
               <div class="meta-value">
                 ${pagesEnabled
-                  ? `<a href="${pagesUrl}" target="_blank">${pagesUrl.replace('https://','')}</a>`
+                  ? `<a href="${pagesUrl}" target="_blank" rel="noopener">${pagesUrl.replace('https://','')}</a>`
                   : `<span style="color:var(--faint)">Not published yet</span>`
                 }
               </div>
@@ -471,12 +480,12 @@
             <div class="panel">
               <div class="panel-head">
                 <span class="panel-title">Recent Commits</span>
-                <a href="${repoData.html_url}/commits" target="_blank" style="font-size:10px;color:var(--faint);text-decoration:none;">View all ↗</a>
+                <a href="${repoData.html_url}/commits" target="_blank" rel="noopener" style="font-size:10px;color:var(--faint);text-decoration:none;">View all ↗</a>
               </div>
               <div class="commit-list">
                 ${commitsData.length ? commitsData.map(c => `
-                  <a class="commit-item" href="${repoData.html_url}/commit/${c.sha}" target="_blank" style="text-decoration:none;color:inherit;display:flex;gap:12px;align-items:flex-start;padding:12px 18px;border-bottom:1px solid var(--border);">
-                    <div class="commit-dot mine"></div>
+                  <a class="commit-item" href="${repoData.html_url}/commit/${c.sha}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:flex;gap:12px;align-items:flex-start;padding:12px 18px;border-bottom:1px solid var(--border);">
+                    <div class="commit-dot mine" aria-hidden="true"></div>
                     <div class="commit-info">
                       <div class="commit-msg">${c.commit.message.split('\n')[0]}</div>
                       <div class="commit-sub">${c.commit.author.name} · ${timeAgo(c.commit.author.date)}</div>
@@ -491,35 +500,35 @@
           <div class="sidebar-stack">
             <div class="panel">
               <div class="panel-head"><span class="panel-title">Quick Links</span></div>
-              <a class="link-item" href="${repoData.html_url}" target="_blank">
-                <span class="link-icon">◈</span>
+              <a class="link-item" href="${repoData.html_url}" target="_blank" rel="noopener">
+                <span class="link-icon" aria-hidden="true">◈</span>
                 <span class="link-label">Repository</span>
-                <span class="link-arrow">↗</span>
+                <span class="link-arrow" aria-hidden="true">↗</span>
               </a>
-              <a class="link-item" href="${siteUrl}" target="_blank">
-                <span class="link-icon">⊕</span>
+              <a class="link-item" href="${siteUrl}" target="_blank" rel="noopener">
+                <span class="link-icon" aria-hidden="true">⊕</span>
                 <span class="link-label">Live Site</span>
-                <span class="link-arrow">↗</span>
+                <span class="link-arrow" aria-hidden="true">↗</span>
               </a>
-              <a class="link-item" href="${repoData.html_url}/settings/pages" target="_blank">
-                <span class="link-icon">◎</span>
+              <a class="link-item" href="${repoData.html_url}/settings/pages" target="_blank" rel="noopener">
+                <span class="link-icon" aria-hidden="true">◎</span>
                 <span class="link-label">GitHub Pages Settings</span>
-                <span class="link-arrow">↗</span>
+                <span class="link-arrow" aria-hidden="true">↗</span>
               </a>
-              <a class="link-item" href="${repoData.html_url}/blob/main/rondo.js" target="_blank">
-                <span class="link-icon">◆</span>
+              <a class="link-item" href="${repoData.html_url}/blob/main/rondo.js" target="_blank" rel="noopener">
+                <span class="link-icon" aria-hidden="true">◆</span>
                 <span class="link-label">rondo.js config</span>
-                <span class="link-arrow">↗</span>
+                <span class="link-arrow" aria-hidden="true">↗</span>
               </a>
-              ${sheetUrl ? `<a class="link-item" href="${sheetUrl}" target="_blank">
-                <span class="link-icon">⊞</span>
+              ${sheetUrl ? `<a class="link-item" href="${sheetUrl}" target="_blank" rel="noopener">
+                <span class="link-icon" aria-hidden="true">⊞</span>
                 <span class="link-label">Google Sheet</span>
-                <span class="link-arrow">↗</span>
+                <span class="link-arrow" aria-hidden="true">↗</span>
               </a>` : ''}
-              <a class="link-item" href="${repoData.html_url}/actions" target="_blank">
-                <span class="link-icon">◇</span>
+              <a class="link-item" href="${repoData.html_url}/actions" target="_blank" rel="noopener">
+                <span class="link-icon" aria-hidden="true">◇</span>
                 <span class="link-label">Actions / Deployments</span>
-                <span class="link-arrow">↗</span>
+                <span class="link-arrow" aria-hidden="true">↗</span>
               </a>
             </div>
 
@@ -544,7 +553,7 @@
                 </div>
                 ${sheetId ? `<div>
                   <div class="meta-label" style="margin-bottom:4px;">Google Sheet ID</div>
-                  <div class="meta-value"><a href="${sheetUrl}" target="_blank" style="color:var(--blue);font-size:10px;word-break:break-all;">${sheetId}</a></div>
+                  <div class="meta-value"><a href="${sheetUrl}" target="_blank" rel="noopener" style="color:var(--blue);font-size:10px;word-break:break-all;">${sheetId}</a></div>
                 </div>` : ''}
                 <div>
                   <div class="meta-label" style="margin-bottom:4px;">Clone URL</div>
@@ -555,6 +564,15 @@
           </div>
         </div>
       `;
+
+      // ── Accessibility: hide decorative glyphs, enable folder keyboard use ──
+      document.querySelectorAll('.link-icon, .link-arrow').forEach(el => el.setAttribute('aria-hidden', 'true'));
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+        if (e.target.closest('a, button, input, textarea, select')) return;
+        const el = e.target.closest('.tree-item.folder');
+        if (el) { e.preventDefault(); el.click(); }
+      });
 
     } catch(err) {
       document.getElementById('main-content').innerHTML = `

@@ -14,8 +14,8 @@
     --border:      #e4e0db;
     --border-med:  #d4d0cb;
     --text:        #1a1816;
-    --muted:       #8a8480;
-    --faint:       #c8c4c0;
+    --muted:       #655f58;
+    --faint:       #6d6862;
     --green:       #2d7a4f;
     --red:         #c0392b;
     --blue:        #2c5faa;
@@ -218,6 +218,12 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+  /* ── Accessibility ── */
+  :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .skip-link { position: absolute; left: 8px; top: -44px; z-index: 300; background: var(--text); color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 12px; text-decoration: none; transition: top .15s; }
+  .skip-link:focus { top: 8px; }
+
   /* toast */
   .toast {
     position: fixed; bottom: 24px; right: 24px;
@@ -232,17 +238,18 @@
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
 <!-- ── TOPBAR ── -->
 <header class="topbar">
   <div class="topbar-left">
     <span class="topbar-brand">Rondo</span>
-    <span class="topbar-sep">&nbsp;/&nbsp;</span>
+    <span class="topbar-sep" aria-hidden="true">&nbsp;/&nbsp;</span>
     <span class="topbar-page">Dashboard</span>
   </div>
   <div class="topbar-right">
     <span class="topbar-user" id="topbar-user"></span>
     <button class="btn btn-ghost" onclick="logout()">Disconnect</button>
-    <button class="btn btn-secondary" onclick="showToast('Import coming soon')">↑ Import Exhibit</button>
     <button class="btn btn-primary" onclick="window.location.href='new-exhibit-modal.html'">+ New Exhibit</button>
   </div>
 </header>
@@ -250,30 +257,30 @@
 <div class="layout">
 
   <!-- ── SIDEBAR ── -->
-  <aside class="sidebar">
+  <aside class="sidebar" aria-label="Exhibit filters">
     <div class="sidebar-section">
       <div class="sidebar-label">Views</div>
       <div class="sidebar-item active" id="nav-all" onclick="setFilter('all','nav-all')">
         <div class="sidebar-item-left">
-          <span>▦</span> All Exhibits
+          <span aria-hidden="true">▦</span> All Exhibits
         </div>
         <span class="si-badge" id="badge-all">0</span>
       </div>
       <div class="sidebar-item" id="nav-live" onclick="setFilter('live','nav-live')">
         <div class="sidebar-item-left">
-          <span class="si-dot green"></span> Live
+          <span class="si-dot green" aria-hidden="true"></span> Live
         </div>
         <span class="si-badge" id="badge-live">0</span>
       </div>
       <div class="sidebar-item" id="nav-draft" onclick="setFilter('draft','nav-draft')">
         <div class="sidebar-item-left">
-          <span class="si-dot gray"></span> Draft
+          <span class="si-dot gray" aria-hidden="true"></span> Draft
         </div>
         <span class="si-badge" id="badge-draft">0</span>
       </div>
       <div class="sidebar-item" id="nav-error" onclick="setFilter('error','nav-error')">
         <div class="sidebar-item-left">
-          <span class="si-dot red"></span> Errors
+          <span class="si-dot red" aria-hidden="true"></span> Errors
         </div>
         <span class="si-badge" id="badge-error">0</span>
       </div>
@@ -282,23 +289,17 @@
     <div class="sidebar-section">
       <div class="sidebar-label">Collections</div>
       <div class="sidebar-item" id="nav-rondo" onclick="setFilter('rondo','nav-rondo')">
-        <div class="sidebar-item-left">◈ Rondo</div>
+        <div class="sidebar-item-left"><span aria-hidden="true">◈</span> Rondo</div>
       </div>
       <div class="sidebar-item" id="nav-rondo360" onclick="setFilter('rondo-360','nav-rondo360')">
-        <div class="sidebar-item-left">◉ Rondo 360</div>
+        <div class="sidebar-item-left"><span aria-hidden="true">◉</span> Rondo 360</div>
       </div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Quick Actions</div>
-      <div class="sidebar-item" onclick="showToast('Bulk link check coming soon')">
-        <div class="sidebar-item-left">⛓ Bulk Link Check</div>
-      </div>
-    </div>
   </aside>
 
   <!-- ── MAIN ── -->
-  <main class="main">
+  <main class="main" id="main-content" tabindex="-1">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -308,7 +309,6 @@
       </div>
       <div class="header-actions">
         <button class="btn btn-secondary" id="btn-view" onclick="toggleView()">≡ List View</button>
-        <button class="btn btn-ghost" onclick="window.open('https://github.com','_blank')">↗ Open All</button>
       </div>
     </div>
 
@@ -317,7 +317,7 @@
       <div class="stat-card">
         <div class="stat-label">Total Exhibits</div>
         <div class="stat-value" id="stat-total">—</div>
-        <div class="stat-meta"><span class="up">↑</span> <span id="stat-total-sub">loading…</span></div>
+        <div class="stat-meta"><span class="up" aria-hidden="true">↑</span> <span id="stat-total-sub">loading…</span></div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Live &amp; Public</div>
@@ -339,8 +339,8 @@
     <!-- Filters -->
     <div class="filters">
       <div class="search-wrap">
-        <span style="color:var(--faint);font-size:11px">⌕</span>
-        <input type="text" id="search-input" placeholder="Search exhibits…" oninput="renderCards()">
+        <span style="color:var(--faint);font-size:11px" aria-hidden="true">⌕</span>
+        <input type="text" id="search-input" placeholder="Search exhibits…" aria-label="Search exhibits" oninput="renderCards()">
       </div>
       <button class="filter-pill active" id="sort-recent" onclick="setSort('recent')">Sort: Recent ▾</button>
       <button class="filter-pill" id="sort-alpha" onclick="setSort('alpha')">A–Z</button>
@@ -348,7 +348,7 @@
     </div>
 
     <!-- Loading -->
-    <div id="loading-state">Loading your exhibits…</div>
+    <div id="loading-state" role="status" aria-live="polite">Loading your exhibits…</div>
 
     <!-- Cards -->
     <div id="cards-container" class="exhibits-grid" style="display:none"></div>
@@ -357,7 +357,7 @@
 </div>
 
 <!-- TOAST -->
-<div class="toast" id="toast"><span id="toast-msg"></span></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-msg"></span></div>
 
 <script>
   // ── AUTH ─────────────────────────────────────────────────────────────────
@@ -487,31 +487,31 @@
 
     if (viewMode === 'grid') {
       container.innerHTML = data.map(e => `
-        <div class="exhibit-card" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">
+        <div class="exhibit-card" role="button" tabindex="0" aria-label="Open ${e.title} exhibit details" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">
           <div class="exhibit-thumb ${THUMB[e.type] || 'thumb-def'}">
-            <span class="thumb-watermark">${e.type === 'rondo-360' ? '360' : e.title.slice(0,4).toUpperCase()}</span>
+            <span class="thumb-watermark" aria-hidden="true">${e.type === 'rondo-360' ? '360' : e.title.slice(0,4).toUpperCase()}</span>
             <div class="status-badge ${BADGE_CLS[e.status]}">${BADGE_LBL[e.status]}</div>
           </div>
           <div class="exhibit-body">
             <div class="exhibit-title">${e.title}</div>
             <div class="exhibit-desc">${e.desc.slice(0,100)}${e.desc.length>100?'…':''}</div>
             <div class="exhibit-meta">
-              <span>◈ ${e.type}</span>
-              <span>◷ ${e.updated}</span>
+              <span><span aria-hidden="true">◈ </span>${e.type}</span>
+              <span><span aria-hidden="true">◷ </span>${e.updated}</span>
             </div>
             <div class="exhibit-footer">
               <span class="exhibit-url">${e.repoName}</span>
               <div class="foot-actions" onclick="event.stopPropagation()">
-                <button class="icon-btn" title="Open repo" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">↗</button>
-                ${e.siteUrl ? `<button class="icon-btn" title="Open site" onclick="window.open('${e.siteUrl}','_blank')">⊕</button>` : ''}
+                <button class="icon-btn" aria-label="Open ${e.title} details" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')"><span aria-hidden="true">↗</span></button>
+                ${e.siteUrl ? `<button class="icon-btn" aria-label="Open ${e.title} live site in new tab" onclick="window.open('${e.siteUrl}','_blank')"><span aria-hidden="true">⊕</span></button>` : ''}
               </div>
             </div>
           </div>
         </div>`).join('');
     } else {
       container.innerHTML = data.map(e => `
-        <div class="list-card" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">
-          <div class="list-thumb ${THUMB[e.type] || 'thumb-def'}">
+        <div class="list-card" role="button" tabindex="0" aria-label="Open ${e.title} exhibit details" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">
+          <div class="list-thumb ${THUMB[e.type] || 'thumb-def'}" aria-hidden="true">
             <span>${e.type === 'rondo-360' ? '360' : 'RDO'}</span>
           </div>
           <div class="list-info">
@@ -523,7 +523,7 @@
             <span>${e.updated}</span>
           </div>
           <div onclick="event.stopPropagation()">
-            <button class="icon-btn" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">↗</button>
+            <button class="icon-btn" aria-label="Open ${e.title} details" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')"><span aria-hidden="true">↗</span></button>
           </div>
         </div>`).join('');
     }
@@ -587,6 +587,19 @@
     clearTimeout(toastT);
     toastT = setTimeout(() => t.classList.remove('show'), 2400);
   }
+
+  // ── Keyboard accessibility for div-based controls ──
+  document.querySelectorAll('.sidebar-item').forEach(el => {
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    // Let native buttons, links and inputs handle their own keys
+    if (e.target.closest('button, a, input, textarea, select')) return;
+    const el = e.target.closest('.sidebar-item, .exhibit-card, .list-card');
+    if (el) { e.preventDefault(); el.click(); }
+  });
 
   init();
 </script>

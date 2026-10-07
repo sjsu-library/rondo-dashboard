@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Connect your GitHub</title>
+<title>Connect GitHub · Rondo</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,7 +13,7 @@
     --surface: #ffffff;
     --border: #e4e0db;
     --text: #1a1816;
-    --muted: #8a8480;
+    --muted: #655f58;
     --github: #24292f;
     --github-hover: #32383f;
     --green: #2d7a4f;
@@ -60,9 +60,9 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 56px 52px;
+    padding: 52px 52px 48px;
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     position: relative;
     z-index: 1;
     box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 32px rgba(0,0,0,.06);
@@ -78,19 +78,22 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 40px;
+    margin-bottom: 32px;
   }
-  .logo-mark {
+  /* logo mark is now a link to the Rondo repository */
+  a.logo-mark {
     width: 32px; height: 32px;
     border: 1.5px solid var(--text);
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    transition: background .15s, color .15s;
   }
+  a.logo-mark:hover { background: var(--text); color: #fff; }
+  a.logo-mark svg { width: 17px; height: 17px; fill: currentColor; }
   .logo-name {
     font-family: var(--font-mono);
     font-size: 13px;
@@ -99,28 +102,67 @@
     color: var(--muted);
     text-transform: uppercase;
   }
+  .logo-name a { color: inherit; text-decoration: none; }
+  .logo-name a:hover { color: var(--text); }
 
   .heading {
     font-size: 26px;
     font-weight: 400;
     line-height: 1.3;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     letter-spacing: -.01em;
   }
   .heading em { font-style: italic; font-weight: 400; }
 
-  .tagline {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--muted);
+  .intro {
+    font-size: 15px;
     line-height: 1.6;
-    margin-bottom: 36px;
+    color: var(--text);
+    margin-bottom: 22px;
+  }
+  .intro a {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--muted);
   }
 
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin-bottom: 36px;
+  /* "Why connect" reasons */
+  .why {
+    list-style: none;
+    margin-bottom: 30px;
+    border-top: 1px solid var(--border);
+  }
+  .why li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .why-icon {
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: #f1efeb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+  .why-icon svg { width: 15px; height: 15px; stroke: var(--text); fill: none; stroke-width: 1.6; }
+  .why-text { flex: 1; }
+  .why-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .02em;
+    margin-bottom: 3px;
+  }
+  .why-desc {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--muted);
   }
 
   .btn-github {
@@ -175,6 +217,8 @@
     color: var(--text);
     margin-bottom: 16px;
     user-select: all;
+    word-break: break-all;
+    overflow-wrap: anywhere;
   }
 
   .device-instruction {
@@ -266,23 +310,72 @@
     z-index: 1;
     animation: rise .5s .2s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
+  .footer-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+  .footer-note a:hover { color: var(--text); }
+
+  /* ── Accessibility ── */
+  :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 3px; }
+
+  /* ── Small screens: avoid clipping ── */
+  @media (max-width: 480px) {
+    .card { padding: 36px 24px 32px; }
+    .device-code { font-size: 22px; letter-spacing: .12em; }
+    .device-actions { flex-wrap: wrap; }
+  }
 </style>
 </head>
 <body>
 
 <div class="card">
   <div class="logo">
-    <div class="logo-mark">R</div>
-    <span class="logo-name">App</span>
+    <!-- logo mark links to the Rondo repository -->
+    <a class="logo-mark" href="https://github.com/sjsu-library/rondo" target="_blank" rel="noopener" aria-label="Rondo on GitHub">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+    </a>
+    <span class="logo-name"><a href="https://github.com/sjsu-library/rondo" target="_blank" rel="noopener">Rondo</a></span>
   </div>
 
-  <h1 class="heading">Connect your<br><em>GitHub account</em></h1>
-  <p class="tagline">Fork, manage and publish repositories<br>directly from your browser.</p>
+  <h1 class="heading">Connect GitHub to<br>publish with <em>Rondo</em></h1>
 
-  <div class="divider"></div>
+  <p class="intro">
+    <a href="https://github.com/sjsu-library/rondo" target="_blank" rel="noopener">Rondo</a>
+    is a tool for building digital exhibits with minimal setup — your content lives
+    in a single Google Sheet, and your site is published as a web page you can share.
+    Connecting GitHub lets Rondo set up and host that site for you, right from the browser.
+  </p>
+
+  <ul class="why">
+    <li>
+      <span class="why-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3v12M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM6 3a3 3 0 1 0 0 0zM18 9a3 3 0 1 0 0 0zM18 9c0 3-4 3-6 4"/></svg>
+      </span>
+      <span class="why-text">
+        <div class="why-title">Get your own copy</div>
+        <div class="why-desc">Rondo copies the exhibit template into your GitHub account so your work is yours to keep and edit.</div>
+      </span>
+    </li>
+    <li>
+      <span class="why-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v13M12 3l-4 4M12 3l4 4M5 21h14"/></svg>
+      </span>
+      <span class="why-text">
+        <div class="why-title">Publish to the web</div>
+        <div class="why-desc">Your exhibit goes live on GitHub Pages with a shareable link — no servers or software to install.</div>
+      </span>
+    </li>
+    <li>
+      <span class="why-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      </span>
+      <span class="why-text">
+        <div class="why-title">Manage it from here</div>
+        <div class="why-desc">Update, republish, and manage your exhibit from this dashboard whenever your Sheet changes.</div>
+      </span>
+    </li>
+  </ul>
 
   <button class="btn-github" id="btn-connect" onclick="startDeviceFlow()">
-    <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
     Continue with GitHub
   </button>
 
@@ -290,7 +383,7 @@
     <div class="device-step">Step 1 — Copy your code</div>
     <div class="device-code" id="device-code">——————</div>
     <div class="device-instruction">
-      Enter this code at <a id="verify-link" href="https://github.com/login/device" target="_blank">github.com/login/device</a><br>
+      Enter this code at <a id="verify-link" href="https://github.com/login/device" target="_blank" rel="noopener">github.com/login/device</a><br>
       then approve access for this app.
     </div>
     <div class="device-actions">
@@ -298,26 +391,29 @@
       <button class="btn-copy" id="btn-copy" onclick="copyCode()">Copy</button>
     </div>
     <div class="polling" id="polling">
-      <span class="poll-dot"></span>
-      <span class="poll-dot"></span>
-      <span class="poll-dot"></span>
+      <span class="poll-dot" aria-hidden="true"></span>
+      <span class="poll-dot" aria-hidden="true"></span>
+      <span class="poll-dot" aria-hidden="true"></span>
       Waiting for your approval…
     </div>
   </div>
 
-  <div class="status-msg" id="status-msg"></div>
+  <div class="status-msg" id="status-msg" role="status" aria-live="polite"></div>
 </div>
 
 <p class="footer-note">
   We only request <code>repo</code> scope.<br>
-  Your credentials are never stored on our servers.
+  Your credentials are never stored on our servers.<br>
+  <a href="https://github.com/sjsu-library/rondo" target="_blank" rel="noopener">Learn more about Rondo ↗</a>
 </p>
 
 <script>
+  // The GitHub Client ID lives on your Cloudflare Worker now; the browser
+  // no longer needs it for the fetches below. Left here for reference only.
   const CLIENT_ID = 'Ov23licZ6L3RPQH85DI9';
 
   // Base URL of your deployed Cloudflare Worker.
-  // After you deploy, paste the Worker URL here, e.g.
+  // Paste your Worker URL here, e.g.
   //   'https://github-auth-proxy.YOURNAME.workers.dev'
   // Leave as '' to use same-origin routes (local server.js during dev).
   const API_BASE = 'https://github-auth-proxy.yashu-paladugu.workers.dev';
@@ -411,7 +507,7 @@
 }
 
   function onSuccess(token) {
-    clearTimeout(pollTimer); 
+    clearTimeout(pollTimer);
     sessionStorage.setItem('gh_token', token);
     document.getElementById('polling').classList.remove('visible');
     showStatus('success', '✓ GitHub connected! Taking you to the app…');
@@ -421,7 +517,7 @@
   }
 
   function onError(msg) {
-    clearTimeout(pollTimer); 
+    clearTimeout(pollTimer);
     document.getElementById('device-panel').classList.remove('visible');
     document.getElementById('polling').classList.remove('visible');
     const btn = document.getElementById('btn-connect');

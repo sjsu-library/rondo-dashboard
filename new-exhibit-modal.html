@@ -13,8 +13,8 @@
     --surface: #ffffff;
     --border: #e4e0db;
     --text: #1a1816;
-    --muted: #8a8480;
-    --faint: #c8c4c0;
+    --muted: #655f58;
+    --faint: #6d6862;
     --green: #2d7a4f;
     --red: #c0392b;
     --font-serif: 'Lora', Georgia, serif;
@@ -195,6 +195,20 @@
   .btn-sm:hover { opacity: .85; }
   .btn-sm:disabled { opacity: .3; cursor: not-allowed; }
 
+  /* SHEET SETUP — numbered instructions */
+  .sheet-paste-box .paste-intro { font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+  .sheet-steps { list-style: none; counter-reset: s; margin: 0 0 12px; padding: 0; }
+  .sheet-steps li { position: relative; padding-left: 27px; margin-bottom: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.65; counter-increment: s; }
+  .sheet-steps li:last-child { margin-bottom: 0; }
+  .sheet-steps li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%; background: var(--text); color: #fff; font-size: 9px; display: flex; align-items: center; justify-content: center; }
+  .sheet-steps li strong { color: var(--text); font-weight: 500; }
+  .sheet-steps code { background: #efece8; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-size: 10.5px; color: var(--text); display: block; max-width: 100%; margin-top: 5px; white-space: normal; word-break: break-all; overflow-wrap: anywhere; line-height: 1.5; }
+  .sheet-steps code .hl { color: var(--green); font-weight: 500; }
+  .paste-hint { font-family: var(--font-mono); font-size: 10.5px; color: #8a6a00; background: #fff8ed; border: 1px solid #f0ddb0; border-radius: 6px; padding: 9px 11px; line-height: 1.55; margin-bottom: 12px; }
+  .paste-hint strong { font-weight: 500; }
+  .reopen-link { display: inline-block; margin-bottom: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .reopen-link:hover { opacity: .7; }
+
   /* SUCCESS STATE */
   .success-panel { display: none; padding: 32px 36px; text-align: center; }
   .success-panel.visible { display: block; }
@@ -211,6 +225,10 @@
   /* STATUS MSG */
   .status-msg { display: none; margin-top: 16px; padding: 10px 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; line-height: 1.5; }
   .status-msg.error { display: block; background: #fdf0ee; color: var(--red); border: 1px solid #f0c0bb; }
+
+  /* ── Accessibility ── */
+  :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 </style>
 </head>
 <body>
@@ -224,20 +242,20 @@
         <h2>New <em>Exhibit</em></h2>
         <p>Choose a template to get started</p>
       </div>
-      <button class="btn-close" title="Close" onclick="window.location.href='landing.html'">✕</button>
+      <button class="btn-close" aria-label="Close and return to dashboard" onclick="window.location.href='landing.html'"><span aria-hidden="true">✕</span></button>
     </div>
 
     <div class="modal-body">
       <div class="step-label">Step 1 — Choose a template</div>
       <div class="template-grid">
-        <div class="template-card selected" data-type="rondo" onclick="selectTemplate(this)">
-          <div class="check-circle">✓</div>
+        <div class="template-card selected" data-type="rondo" role="button" tabindex="0" aria-pressed="true" onclick="selectTemplate(this)">
+          <div class="check-circle" aria-hidden="true">✓</div>
           <div class="template-name">Rondo</div>
           <div class="template-desc">Pages, items & Google Sheets. Standard digital exhibit.</div>
           <span class="template-tag">Standard</span>
         </div>
-        <div class="template-card" data-type="rondo-360" onclick="selectTemplate(this)">
-          <div class="check-circle"></div>
+        <div class="template-card" data-type="rondo-360" role="button" tabindex="0" aria-pressed="false" onclick="selectTemplate(this)">
+          <div class="check-circle" aria-hidden="true"></div>
           <div class="template-name">Rondo 360</div>
           <div class="template-desc">Immersive 360° exhibit with panoramic views & media.</div>
           <span class="template-tag">Immersive</span>
@@ -246,7 +264,7 @@
 
       <div class="step-label">Step 2 — Name your exhibit</div>
       <div class="form-group">
-        <input class="form-input" id="exhibit-name" type="text" placeholder="e.g. Valley Water History" oninput="checkForm()">
+        <input class="form-input" id="exhibit-name" type="text" placeholder="e.g. Valley Water History" aria-label="Exhibit name" oninput="checkForm()">
       </div>
     </div>
 
@@ -265,12 +283,12 @@
       </div>
     </div>
 
-    <div class="progress-panel visible">
+    <div class="progress-panel visible" aria-live="polite">
       <div class="progress-steps">
 
         <!-- Step 1: Fork -->
         <div class="progress-step">
-          <div class="step-indicator spinning" id="ind-fork"></div>
+          <div class="step-indicator spinning" id="ind-fork" aria-hidden="true"></div>
           <div class="step-info">
             <div class="step-title" id="title-fork">Forking repository…</div>
             <div class="step-sub" id="sub-fork">Copying the template to your GitHub account</div>
@@ -279,13 +297,13 @@
 
         <!-- Step 2: Connect Google -->
         <div class="progress-step">
-          <div class="step-indicator" id="ind-google">2</div>
+          <div class="step-indicator" id="ind-google" aria-hidden="true">2</div>
           <div class="step-info">
             <div class="step-title muted" id="title-google">Connect Google Account</div>
             <div class="step-sub" id="sub-google">Needed to auto-share your Sheet</div>
             <div id="google-connect-box" style="display:none; margin-top:10px;">
               <button onclick="connectGoogle()" style="display:flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--font-mono);font-size:12px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#b0aca8'" onmouseout="this.style.borderColor='var(--border)'">
-                <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                 Connect Google Account
               </button>
             </div>
@@ -294,27 +312,42 @@
 
         <!-- Step 3: Sheet -->
         <div class="progress-step">
-          <div class="step-indicator" id="ind-sheet">3</div>
+          <div class="step-indicator" id="ind-sheet" aria-hidden="true">3</div>
           <div class="step-info">
-            <div class="step-title muted" id="title-sheet">Copy Google Sheet</div>
-            <div class="step-sub" id="sub-sheet">Make a copy of the data template</div>
+            <div class="step-title muted" id="title-sheet">Copy & connect your Sheet</div>
+            <div class="step-sub" id="sub-sheet">Make your own copy of the data template</div>
 
             <!-- Paste box — shown after fork is done -->
             <div class="sheet-paste-box" id="sheet-paste-box">
-              <p>
-                A Google Sheet template has opened in a new tab.<br>
-                Sign in with <strong>any Google account</strong>, then click <strong>File → Make a copy</strong>.<br>
-                Paste the URL of your new copy below.
-                <br><br>
-                <a onclick="openSheetCopy()">↗ Re-open the Sheet template</a>
+              <p class="paste-intro">
+                A Google Sheet template just opened in a new tab. This sheet is where all of your exhibit's content lives — its pages, items, and captions. You'll make your own copy of it, then paste that copy's link below.
               </p>
+              <ol class="sheet-steps">
+                <li>
+                  <strong>Make your own copy.</strong> In the template tab (sign in to Google if prompted), open <strong>File → Make a copy</strong>. In the dialog, give it a name and click <strong>Make a copy</strong>. Google opens <em>your new copy</em> in a new tab.
+                </li>
+                <li>
+                  <strong>Publish your copy to the web.</strong> In your new copy, open <strong>File → Share → Publish to web</strong>, then click <strong>Publish</strong> and confirm. This is required without it, your exhibit's GitHub Pages site can't read the Sheet once the repo is created.
+                </li>
+                <li>
+                  <strong>Copy your copy's link.</strong> Switch to that new tab and copy the full web address from the browser's address bar. It looks like:
+                  <code>docs.google.com/spreadsheets/d/<span class="hl">1AbC…long-id…xyz</span>/edit</code>
+                </li>
+                <li>
+                  <strong>Paste it below</strong> and click Confirm.
+                </li>
+              </ol>
+              <p class="paste-hint">
+                <span aria-hidden="true">⚠</span> Paste the link to <strong>your copy</strong> — not the template you opened from. Your copy has a different ID in its address.
+              </p>
+              <a class="reopen-link" role="button" tabindex="0" onclick="openSheetCopy()"><span aria-hidden="true">↗</span> Re-open the Sheet template</a>
               <div class="paste-row">
-                <input class="paste-input" id="sheet-url-input" type="text" placeholder="Paste your new Sheet URL here…" oninput="checkSheetUrl(); updateShareLink();">
+                <input class="paste-input" id="sheet-url-input" type="text" placeholder="Paste your new Sheet URL here…" aria-label="Your copied Google Sheet URL" oninput="checkSheetUrl(); updateShareLink();">
                 <button class="btn-sm" id="btn-confirm-sheet" disabled onclick="confirmSheet()">Confirm</button>
               </div>
               <div id="share-reminder" style="display:none; margin-top:10px; padding:10px 12px; background:#fff8ed; border:1px solid #f0ddb0; border-radius:6px;">
-                <span style="font-size:11px; color:#8a6a00;">⚠ Make sure your sheet is public — </span>
-                <a id="share-link" href="#" target="_blank" style="font-size:11px; color:#8a6a00; font-weight:500; text-decoration:underline; text-underline-offset:3px;">Open sharing settings ↗</a>
+                <span style="font-size:11px; color:#8a6a00;"><span aria-hidden="true">⚠</span> Make sure your sheet is public — </span>
+                <a id="share-link" href="#" target="_blank" rel="noopener" style="font-size:11px; color:#8a6a00; font-weight:500; text-decoration:underline; text-underline-offset:3px;">Open sharing settings ↗</a>
               </div>
             </div>
           </div>
@@ -322,7 +355,7 @@
 
         <!-- Step 4: Update rondo.js -->
         <div class="progress-step">
-          <div class="step-indicator" id="ind-update">4</div>
+          <div class="step-indicator" id="ind-update" aria-hidden="true">4</div>
           <div class="step-info">
             <div class="step-title muted" id="title-update">Update rondo.js</div>
             <div class="step-sub" id="sub-update">Connect your Sheet to the exhibit</div>
@@ -331,7 +364,7 @@
 
       </div>
 
-      <div class="status-msg" id="status-msg"></div>
+      <div class="status-msg" id="status-msg" role="alert"></div>
     </div>
   </div>
 
@@ -339,15 +372,15 @@
   <div id="panel-success" style="display:none">
     <div class="modal-head" style="border-bottom:none;padding-bottom:0">
       <div></div>
-      <button class="btn-close" onclick="resetModal()">✕</button>
+      <button class="btn-close" aria-label="Close" onclick="resetModal()"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="success-panel visible">
-      <div class="success-mark">✓</div>
+      <div class="success-mark" aria-hidden="true">✓</div>
       <div class="success-title">Your <em>Exhibit</em> is ready</div>
       <p class="success-sub" id="success-sub">Repository forked and connected to your Google Sheet.</p>
       <div class="success-links">
-        <a class="link-btn link-btn-primary" id="link-repo" href="#" target="_blank">View Repository →</a>
-        <a class="link-btn link-btn-ghost" onclick="window.location.href='landing.html'">Done</a>
+        <a class="link-btn link-btn-primary" id="link-repo" href="#" target="_blank" rel="noopener">View Repository →</a>
+        <a class="link-btn link-btn-ghost" role="button" tabindex="0" onclick="window.location.href='landing.html'">Done</a>
       </div>
     </div>
   </div>
@@ -399,9 +432,11 @@
   function selectTemplate(card) {
     document.querySelectorAll('.template-card').forEach(c => {
       c.classList.remove('selected');
+      c.setAttribute('aria-pressed', 'false');
       c.querySelector('.check-circle').textContent = '';
     });
     card.classList.add('selected');
+    card.setAttribute('aria-pressed', 'true');
     card.querySelector('.check-circle').textContent = '✓';
     selectedType = card.dataset.type;
     console.log('[Rondo] selectedType =', selectedType, '| repo =', TEMPLATES[selectedType]?.repo);
@@ -701,11 +736,13 @@
     selectedType = TEMPLATE_LIST[0].id;
     document.querySelectorAll('.template-card').forEach(c => {
       c.classList.remove('selected');
+      c.setAttribute('aria-pressed', 'false');
       c.querySelector('.check-circle').textContent = '';
     });
     const defaultCard = document.querySelector(`.template-card[data-type="${TEMPLATE_LIST[0].id}"]`);
     if (defaultCard) {
       defaultCard.classList.add('selected');
+      defaultCard.setAttribute('aria-pressed', 'true');
       defaultCard.querySelector('.check-circle').textContent = '✓';
     }
     setStep('fork',   'wait');
@@ -763,6 +800,14 @@
   }
 
   function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // ── Keyboard accessibility for div/anchor-based controls ──
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    if (e.target.closest('button, input, textarea, select')) return;
+    const el = e.target.closest('.template-card, [role="button"]');
+    if (el) { e.preventDefault(); el.click(); }
+  });
 </script>
 </body>
 </html>
