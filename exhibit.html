@@ -407,7 +407,8 @@
             <h1 class="hero-title">${repoData.name.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/(\w+)/g, m => m.length > 3 ? '<em>' + m + '</em>' : m)}</h1>
             <p class="hero-desc">${repoData.description || 'No description. Add one in GitHub repository settings.'}</p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="${repoData.html_url}" target="_blank" rel="noopener">Open in GitHub ↗</a>
+              <a class="btn btn-primary" href="editor.html?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}">✎ Edit Content</a>
+              <a class="btn btn-ghost" href="${repoData.html_url}" target="_blank" rel="noopener">Open in GitHub ↗</a>
               ${pagesEnabled
                 ? `<a class="btn btn-green" href="${pagesUrl}" target="_blank" rel="noopener">View Live Site ⊕</a>`
                 : `<button class="btn btn-green" id="btn-publish" onclick="publishPages()">Publish to GitHub Pages ⊕</button>`

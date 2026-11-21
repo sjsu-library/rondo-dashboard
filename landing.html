@@ -161,6 +161,11 @@
     font-family: var(--font-mono); font-size: 48px; font-weight: 500;
     letter-spacing: .08em; color: rgba(26,24,22,.06); user-select: none;
   }
+  /* live-site preview thumbnails */
+  .thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; opacity: 0; transition: opacity .3s; }
+  .thumb-img.loaded { opacity: 1; }
+  .thumb-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; pointer-events: none; }
+  .list-thumb .thumb-img { border-radius: 6px; }
 
   .status-badge {
     position: absolute; top: 12px; left: 12px;
@@ -454,6 +459,35 @@
 
   // ── FILTER & RENDER ───────────────────────────────────────────────────────
   const THUMB = { rondo: 'thumb-hist', 'rondo-360': 'thumb-art' };
+
+  // ── Card preview thumbnails ──
+  // 'screenshot' = cached image of the live site (scannable, light on the client; the
+  //                public site URL is sent to WordPress mShots to render the thumbnail).
+  // 'iframe'     = live in-page preview, no third-party service (heavier, most private).
+  // 'off'        = original letter watermark only.
+  const THUMB_MODE = 'screenshot';
+
+  function previewUrl(e) {
+    return e.siteUrl || (e.status === 'live' ? `https://${e.repoOwner}.github.io/${e.repoName}/` : null);
+  }
+  function thumbInner(e) {
+    const letters = e.type === 'rondo-360' ? '360' : e.title.slice(0,4).toUpperCase();
+    const wm = `<span class="thumb-watermark" aria-hidden="true">${letters}</span>`;
+    const url = previewUrl(e);
+    if (THUMB_MODE === 'off' || !url) return wm;
+    if (THUMB_MODE === 'iframe') {
+      return wm + `<iframe class="thumb-frame" src="${url}" loading="lazy" tabindex="-1" aria-hidden="true" sandbox="allow-scripts allow-same-origin"></iframe>`;
+    }
+    const shot = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=640&h=360`;
+    return wm + `<img class="thumb-img" alt="" loading="lazy" src="${shot}" onload="thumbLoaded(this)" onerror="this.remove()">`;
+  }
+  function thumbLoaded(img) {
+    img.classList.add('loaded');
+    // mShots serves a placeholder while it generates the screenshot; refresh once to pick up the real image.
+    if (img.dataset.retried) return;
+    img.dataset.retried = '1';
+    setTimeout(() => { img.src = img.src.split('&cb=')[0] + '&cb=' + Date.now(); }, 6000);
+  }
   const BADGE_CLS = { live: 'badge-live', draft: 'badge-draft', error: 'badge-error', local: 'badge-local' };
   const BADGE_LBL = { live: '● LIVE', draft: '◆ DRAFT', error: '▲ ERROR', local: '○ LOCAL' };
 
@@ -489,7 +523,7 @@
       container.innerHTML = data.map(e => `
         <div class="exhibit-card" role="button" tabindex="0" aria-label="Open ${e.title} exhibit details" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">
           <div class="exhibit-thumb ${THUMB[e.type] || 'thumb-def'}">
-            <span class="thumb-watermark" aria-hidden="true">${e.type === 'rondo-360' ? '360' : e.title.slice(0,4).toUpperCase()}</span>
+            ${thumbInner(e)}
             <div class="status-badge ${BADGE_CLS[e.status]}">${BADGE_LBL[e.status]}</div>
           </div>
           <div class="exhibit-body">
@@ -502,6 +536,7 @@
             <div class="exhibit-footer">
               <span class="exhibit-url">${e.repoName}</span>
               <div class="foot-actions" onclick="event.stopPropagation()">
+                <button class="icon-btn" aria-label="Edit ${e.title} content" onclick="window.location.href='editor.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')"><span aria-hidden="true">✎</span></button>
                 <button class="icon-btn" aria-label="Open ${e.title} details" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')"><span aria-hidden="true">↗</span></button>
                 ${e.siteUrl ? `<button class="icon-btn" aria-label="Open ${e.title} live site in new tab" onclick="window.open('${e.siteUrl}','_blank')"><span aria-hidden="true">⊕</span></button>` : ''}
               </div>
@@ -511,7 +546,8 @@
     } else {
       container.innerHTML = data.map(e => `
         <div class="list-card" role="button" tabindex="0" aria-label="Open ${e.title} exhibit details" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')">
-          <div class="list-thumb ${THUMB[e.type] || 'thumb-def'}" aria-hidden="true">
+          <div class="list-thumb ${THUMB[e.type] || 'thumb-def'}" style="position:relative;overflow:hidden" aria-hidden="true">
+            ${(THUMB_MODE !== 'off' && previewUrl(e)) ? `<img class="thumb-img" alt="" loading="lazy" src="https://s.wordpress.com/mshots/v1/${encodeURIComponent(previewUrl(e))}?w=160&h=160" onload="thumbLoaded(this)" onerror="this.remove()">` : ''}
             <span>${e.type === 'rondo-360' ? '360' : 'RDO'}</span>
           </div>
           <div class="list-info">
@@ -522,7 +558,8 @@
             <div class="status-badge ${BADGE_CLS[e.status]}" style="position:static">${BADGE_LBL[e.status]}</div>
             <span>${e.updated}</span>
           </div>
-          <div onclick="event.stopPropagation()">
+          <div onclick="event.stopPropagation()" style="display:flex;gap:6px">
+            <button class="icon-btn" aria-label="Edit ${e.title} content" onclick="window.location.href='editor.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')"><span aria-hidden="true">✎</span></button>
             <button class="icon-btn" aria-label="Open ${e.title} details" onclick="window.location.href='exhibit.html?owner='+encodeURIComponent('${e.repoOwner}')+'&repo='+encodeURIComponent('${e.repoName}')"><span aria-hidden="true">↗</span></button>
           </div>
         </div>`).join('');
